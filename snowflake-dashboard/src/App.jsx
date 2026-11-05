@@ -5,6 +5,7 @@ import Sales from "./pages/Sales";
 import Analytics from "./pages/Analytics";
 import "./index.css";
 
+
 function App() {
   return (
     <BrowserRouter>

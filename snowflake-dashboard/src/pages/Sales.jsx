@@ -1,25 +1,19 @@
+
 import { useMemo, useState } from "react";
 import { useSales } from "../hooks/useSales";
 
 function Sales() {
   const { sales, loading, error } = useSales();
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
-
-  const categories = [...new Set(sales.map((item) => item.CATEGORY))];
 
   const filteredSales = useMemo(() => {
     return sales.filter((item) => {
-      const matchesSearch =
+      return (
         item.PRODUCT_NAME?.toLowerCase().includes(search.toLowerCase()) ||
-        item.REGION?.toLowerCase().includes(search.toLowerCase());
-
-      const matchesCategory =
-        category === "All" || item.CATEGORY === category;
-
-      return matchesSearch && matchesCategory;
+        item.REGION?.toLowerCase().includes(search.toLowerCase())
+      );
     });
-  }, [sales, search, category]);
+  }, [sales, search]);
 
   const currency = (value) =>
     new Intl.NumberFormat("en-IN", {
@@ -57,16 +51,6 @@ function Sales() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
-            <option value="All">All Categories</option>
-            {categories.map((item) => (
-              <option key={item} value={item}>{item}</option>
-            ))}
-          </select>
         </div>
 
         <div className="table-wrapper">
