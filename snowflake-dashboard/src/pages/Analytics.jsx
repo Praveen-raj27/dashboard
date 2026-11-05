@@ -123,7 +123,13 @@ function Analytics() {
     };
   }, [sales]);
 
-  if (loading) return <h2>Loading analytics...</h2>;
+  if (loading) return <div className="page-message">
+    <div className="loading-content">
+      <div className="loading-spinner"></div>
+      <p>Loading Analytics</p>
+      <span>Fetching your sales insights...</span>
+    </div>
+  </div>
   if (error) return <h2>{error}</h2>;
 
   return (

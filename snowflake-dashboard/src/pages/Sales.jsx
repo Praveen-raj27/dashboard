@@ -22,7 +22,13 @@ function Sales() {
       maximumFractionDigits: 0,
     }).format(value);
 
-  if (loading) return <h2>Loading sales...</h2>;
+  if (loading) return <div className="page-message">
+    <div className="loading-content">
+      <div className="loading-spinner"></div>
+      <p>Loading Sales</p>
+      <span>Fetching your sales insights...</span>
+    </div>
+  </div>
   if (error) return <h2>{error}</h2>;
 
   return (
