@@ -1662,3 +1662,271 @@ body {
     opacity: 0.3;
   }
 }
+/* Analytics Charts */
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.chart-panel {
+  min-width: 0;
+  min-height: 350px;
+  margin-bottom: 0;
+}
+
+.monthly-chart {
+  grid-column: 1 / -1;
+}
+
+.chart-panel .panel-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.chart-panel .panel-header h3 svg {
+  color: #155E59;
+}
+
+.chart-container {
+  width: 100%;
+  height: 270px;
+  margin-top: 15px;
+}
+
+.chart-empty {
+  display: grid;
+  place-items: center;
+  height: 250px;
+  color: #929D96;
+  font-size: 13px;
+}
+
+.analytics-summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #ffffff;
+  border: 1px solid #e6e4db;
+  border-radius: 12px;
+  padding: 22px;
+  margin-bottom: 20px;
+}
+
+.analytics-summary-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  color: #155E59;
+  background: #E5F1ED;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.analytics-summary span {
+  color: #929D96;
+  font-size: 11px;
+}
+
+.analytics-summary h2 {
+  margin: 5px 0;
+  font-size: 23px;
+  color: #25352F;
+}
+
+.analytics-summary p {
+  margin: 0;
+  color: #929D96;
+  font-size: 11px;
+}
+
+@media (max-width: 900px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .monthly-chart {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .chart-panel {
+    padding: 14px;
+  }
+
+  .chart-container {
+    height: 240px;
+  }
+
+  .analytics-summary h2 {
+    font-size: 19px;
+  }
+}
+
+/* Monthly Performance Comparison */
+
+.comparison-section {
+  margin-bottom: 22px;
+}
+
+.comparison-heading {
+  margin-bottom: 14px;
+}
+
+.comparison-heading h3 {
+  margin: 0 0 5px;
+  color: #25352F;
+  font-size: 15px;
+}
+
+.comparison-heading p {
+  margin: 0;
+  color: #929D96;
+  font-size: 11px;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.comparison-card {
+  background: #ffffff;
+  border: 1px solid #e6e4db;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.comparison-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 17px;
+}
+
+.comparison-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: #e5f1ed;
+  color: #155e59;
+}
+
+.comparison-card > span {
+  color: #929d96;
+  font-size: 11px;
+}
+
+.comparison-card h2 {
+  color: #25352f;
+  font-size: 23px;
+  margin: 7px 0;
+}
+
+.comparison-card p {
+  color: #929d96;
+  font-size: 11px;
+  margin: 0;
+}
+
+.growth-positive,
+.growth-negative,
+.growth-neutral {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 9px;
+  border-radius: 20px;
+}
+
+.growth-positive {
+  color: #23966c;
+  background: #e5f3eb;
+}
+
+.growth-negative {
+  color: #c45b51;
+  background: #fbece9;
+}
+
+.growth-neutral {
+  color: #66756e;
+  background: #f1f2ee;
+}
+
+@media (max-width: 600px) {
+  .comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.page-message {
+  min-height: 65vh;
+  display: grid;
+  place-items: center;
+  background: transparent;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  animation: fade-in 0.4s ease;
+}
+
+.loading-spinner {
+  width: 38px;
+  height: 38px;
+  border: 3px solid #e5f1ed;
+  border-top-color: #155e59;
+  border-right-color: #155e59;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-content p {
+  margin: 8px 0 0;
+  color: #25352f;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.loading-content span {
+  color: #929d96;
+  font-size: 12px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner,
+  .loading-content {
+    animation: none;
+  }
+}
