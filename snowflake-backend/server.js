@@ -1,10 +1,7 @@
 import express from "express";
 import cors from "cors";
 
-import {
-  connectSnowflake,
-  executeQuery,
-} from "./snowflake.js";
+import { connectSnowflake, executeQuery } from "./snowflake.js";
 
 const PORT = process.env.PORT || 5001;
 
@@ -14,11 +11,28 @@ app.use(cors());
 app.use(express.json());
 
 // Health check
-app.get("/api/health", (req, res) => {
-  res.json({
-    success: true,
-    message: "Backend is running",
-  });
+app.get("/api/health", async (req, res) => {
+  try {
+    const rows = await executeQuery("SELECT CURRENT_VERSION() AS VERSION");
+
+    res.status(200).json({
+      success: true,
+      backend: "connected",
+      snowflake: "connected",
+      version: rows[0]?.VERSION,
+      checkedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Health check failed:", error.message);
+
+    res.status(503).json({
+      success: false,
+      backend: "connected",
+      snowflake: "disconnected",
+      message: "Snowflake connection unavailable",
+      checkedAt: new Date().toISOString(),
+    });
+  }
 });
 
 // Get filtered sales
@@ -74,7 +88,6 @@ app.get("/api/sales", async (req, res) => {
       count: sales.length,
       data: sales,
     });
-
   } catch (error) {
     console.error("Sales API error:", error.message);
 
@@ -84,7 +97,6 @@ app.get("/api/sales", async (req, res) => {
     });
   }
 });
-
 
 // Start backend
 const startServer = async () => {
