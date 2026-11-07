@@ -1,4 +1,3 @@
-
 import { randomUUID, createHmac, timingSafeEqual } from "crypto";
 import { executeQuery } from "../config/snowflake.js";
 import {
@@ -6,8 +5,7 @@ import {
   fetchRazorpayPayment,
 } from "../services/payment.service.js";
 
-const getField = (item, upper, lower) =>
-  item?.[upper] ?? item?.[lower];
+const getField = (item, upper, lower) => item?.[upper] ?? item?.[lower];
 
 export const createOrder = async (req, res) => {
   try {
@@ -53,10 +51,7 @@ export const createOrder = async (req, res) => {
         });
       }
 
-      requestedItems.set(
-        itemId,
-        (requestedItems.get(itemId) || 0) + quantity
-      );
+      requestedItems.set(itemId, (requestedItems.get(itemId) || 0) + quantity);
     }
 
     const itemIds = [...requestedItems.keys()];
@@ -64,10 +59,10 @@ export const createOrder = async (req, res) => {
 
     // Read trusted prices and stock from Snowflake.
     const inventory = await executeQuery(
-      `SELECT ID, ITEM_NAME, QUANTITY, UNIT_PRICE
+      `SELECT ITEM_ID, ITEM_NAME, QUANTITY, UNIT_PRICE
        FROM INVENTORY
        WHERE ID IN (${placeholders})`,
-      itemIds
+      itemIds,
     );
 
     if (inventory.length !== itemIds.length) {
@@ -81,7 +76,7 @@ export const createOrder = async (req, res) => {
     const verifiedItems = [];
 
     for (const product of inventory) {
-      const itemId = String(product.ID);
+      const itemId = String(product.ITEM_ID);
       const quantity = requestedItems.get(itemId);
       const available = Number(product.QUANTITY);
       const unitPrice = Number(product.UNIT_PRICE);
@@ -140,7 +135,7 @@ export const createOrder = async (req, res) => {
         customer.pincode.trim(),
         subtotal,
         totalAmount,
-      ]
+      ],
     );
 
     for (const item of verifiedItems) {
@@ -158,7 +153,7 @@ export const createOrder = async (req, res) => {
           item.quantity,
           item.unitPrice,
           item.lineTotal,
-        ]
+        ],
       );
     }
 
@@ -185,7 +180,7 @@ export const createOrder = async (req, res) => {
        SET RAZORPAY_ORDER_ID = ?,
            UPDATED_AT = CURRENT_TIMESTAMP()
        WHERE ORDER_ID = ?`,
-      [razorpayOrder.id, localOrderId]
+      [razorpayOrder.id, localOrderId],
     );
 
     return res.status(201).json({
@@ -203,11 +198,20 @@ export const createOrder = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Create order error:", error);
+    console.error("========== CREATE ORDER ERROR ==========");
+    console.error("Message:", error.message);
+    console.error("Code:", error.code);
+    console.error("SQL State:", error.sqlState);
+    console.error("Stack:", error.stack);
+    console.error("=========================================");
 
     return res.status(500).json({
       success: false,
       message: "Unable to create order.",
+      ...(process.env.NODE_ENV !== "production" && {
+        debug: error.message,
+        code: error.code,
+      }),
     });
   }
 };
@@ -239,7 +243,7 @@ export const verifyPayment = async (req, res) => {
        FROM ORDERS
        WHERE ORDER_ID = ?
        LIMIT 1`,
-      [orderId]
+      [orderId],
     );
 
     const order = rows[0];
@@ -261,7 +265,7 @@ export const verifyPayment = async (req, res) => {
 
     const expectedSignature = createHmac(
       "sha256",
-      process.env.RAZORPAY_KEY_SECRET
+      process.env.RAZORPAY_KEY_SECRET,
     )
       .update(`${order.RAZORPAY_ORDER_ID}|${razorpay_payment_id}`)
       .digest("hex");
@@ -302,7 +306,7 @@ export const verifyPayment = async (req, res) => {
            RAZORPAY_PAYMENT_ID = ?,
            UPDATED_AT = CURRENT_TIMESTAMP()
        WHERE ORDER_ID = ?`,
-      [razorpay_payment_id, orderId]
+      [razorpay_payment_id, orderId],
     );
 
     return res.json({
