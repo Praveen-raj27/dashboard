@@ -1,8 +1,16 @@
+
 import { fetchInventory } from "../services/inventory.service.js";
 
 export const getInventory = async (req, res) => {
   try {
-    const inventory = await fetchInventory();
+    const { startDate, endDate, category } = req.query;
+
+    const inventory = await fetchInventory({
+      startDate,
+      endDate,
+      category,
+    });
+
     res.status(200).json({
       success: true,
       count: inventory.length,

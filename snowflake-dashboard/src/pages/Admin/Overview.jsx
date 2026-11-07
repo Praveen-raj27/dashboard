@@ -1,10 +1,10 @@
+
 import { useMemo } from "react";
 import {
   IndianRupee,
   ShoppingCart,
   BadgeCheck,
   Package,
-  Users,
   Activity,
 } from "lucide-react";
 import { useSales } from "../../hooks/useSales";
@@ -14,12 +14,11 @@ const currency = (value) =>
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
-  }).format(value || 0);
+  }).format(Number(value) || 0);
 
 const formatDate = (value) => {
   if (!value) return "-";
 
-  // Snowflake returns timestamps like "2026-11-07 07:01:35.358"
   const date = new Date(String(value).replace(" ", "T"));
 
   return Number.isNaN(date.getTime())
@@ -31,34 +30,43 @@ const formatDate = (value) => {
       });
 };
 
-const groupOrders = (sales) => {
-  const orders = new Map();
+const groupOrders = (sales = []) => {
+  const ordersMap = new Map();
 
   sales.forEach((item) => {
-    if (!orders.has(item.ORDER_ID)) {
-      orders.set(item.ORDER_ID, {
-        orderId: item.ORDER_ID,
-        customerName: item.CUSTOMER_NAME,
-        customerEmail: item.CUSTOMER_EMAIL,
-        city: item.CITY,
-        state: item.STATE,
+    if (!item.ORDER_ID) return;
+
+    const orderId = String(item.ORDER_ID);
+
+    if (!ordersMap.has(orderId)) {
+      ordersMap.set(orderId, {
+        orderId,
+        customerName: item.CUSTOMER_NAME || "Unknown Customer",
+        customerEmail: item.CUSTOMER_EMAIL || "",
+        customerPhone: item.CUSTOMER_PHONE || "",
+        city: item.CITY || "",
+        state: item.STATE || "",
         totalAmount: Number(item.TOTAL_AMOUNT) || 0,
-        orderStatus: item.ORDER_STATUS,
-        paymentStatus: item.PAYMENT_STATUS,
-        createdAt: item.CREATED_AT,
+        paymentStatus: String(item.PAYMENT_STATUS || "").toUpperCase(),
+        orderStatus: item.ORDER_STATUS || "UNKNOWN",
+        createdAt: item.CREATED_AT || "",
         items: [],
       });
     }
 
-    orders.get(item.ORDER_ID).items.push({
-      name: item.ITEM_NAME,
+    ordersMap.get(orderId).items.push({
+      itemId: item.ITEM_ID,
+      name: item.ITEM_NAME || "Unknown Product",
       quantity: Number(item.QUANTITY) || 0,
+      unitPrice: Number(item.UNIT_PRICE) || 0,
       lineTotal: Number(item.LINE_TOTAL) || 0,
     });
   });
 
-  return [...orders.values()].sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  return [...ordersMap.values()].sort(
+    (a, b) =>
+      new Date(String(b.createdAt).replace(" ", "T")) -
+      new Date(String(a.createdAt).replace(" ", "T"))
   );
 };
 
@@ -68,24 +76,30 @@ function Overview() {
   const { orders, stats } = useMemo(() => {
     const groupedOrders = groupOrders(sales);
 
+    // Only successfully paid orders contribute to revenue and units sold.
     const paidOrders = groupedOrders.filter(
-      (order) => order.PAYMENT_STATUS === "PAID"
+      (order) => order.paymentStatus === "PAID"
     );
 
     const totalRevenue = paidOrders.reduce(
-      (sum, order) => sum + order.totalAmount,
+      (total, order) => total + order.totalAmount,
       0
     );
 
     const unitsSold = paidOrders.reduce(
-      (sum, order) =>
-        sum +
-        order.items.reduce((itemSum, item) => itemSum + item.quantity, 0),
+      (total, order) =>
+        total +
+        order.items.reduce(
+          (itemTotal, item) => itemTotal + item.quantity,
+          0
+        ),
       0
     );
 
     const customers = new Set(
-      paidOrders.map((order) => order.customerEmail || order.customerName)
+      paidOrders
+        .map((order) => order.customerEmail || order.customerName)
+        .filter(Boolean)
     );
 
     return {
@@ -209,7 +223,9 @@ function Overview() {
               {orders.slice(0, 5).map((order) => (
                 <tr key={order.orderId}>
                   <td>
-                    <strong>#{order?.orderId?.slice(0, 8)}</strong>
+                    <strong>
+                      #{String(order.orderId).slice(0, 8)}
+                    </strong>
                   </td>
 
                   <td>
@@ -226,7 +242,7 @@ function Overview() {
                   <td>
                     <div>
                       {order.items.map((item, index) => (
-                        <div key={`${item.name}-${index}`}>
+                        <div key={`${item.itemId}-${index}`}>
                           {item.name} × {item.quantity}
                         </div>
                       ))}
@@ -238,10 +254,14 @@ function Overview() {
                   <td>
                     <span
                       className={`status-badge ${
-                        order.paymentStatus === "PAID" ? "success" : "pending"
+                        order.paymentStatus === "PAID"
+                          ? "success"
+                          : order.paymentStatus === "FAILED"
+                          ? "failed"
+                          : "pending"
                       }`}
                     >
-                      {order.paymentStatus}
+                      {order.paymentStatus || "UNKNOWN"}
                     </span>
                   </td>
 

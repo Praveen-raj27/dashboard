@@ -1,25 +1,32 @@
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useCallback, useState } from "react";
 import { getInventory } from "../../services/salesService";
+import { useFilters } from "../../context/FilterContext";
 import "./Admin.css";
 
 function Inventory() {
+  const { filters } = useFilters();
+
+  const { startDate, endDate, category: globalCategory } = filters;
+
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("all");
 
-  useEffect(() => {
-    fetchInventory();
-  }, []);
-
-  const fetchInventory = async () => {
+  const fetchInventory = useCallback(async (signal) => {
     try {
       setLoading(true);
       setError("");
 
-      const result = await getInventory();
+      const result = await getInventory(
+        {
+          startDate,
+          endDate,
+          category: globalCategory,
+        },
+        signal
+      );
 
       const records = Array.isArray(result)
         ? result
@@ -27,12 +34,24 @@ function Inventory() {
 
       setInventory(records);
     } catch (err) {
-      console.error("Inventory fetch error:", err);
-      setError("Unable to load inventory. Please try again.");
+      if (err.name !== "AbortError") {
+        console.error("Inventory fetch error:", err);
+        setError("Unable to load inventory. Please try again.");
+      }
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
-  };
+  }, [startDate, endDate, globalCategory]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetchInventory(controller.signal);
+
+    return () => controller.abort();
+  }, [fetchInventory]);
 
   const categories = useMemo(() => {
     return [
@@ -48,7 +67,7 @@ function Inventory() {
     return inventory.filter((item) => {
       const searchValue = search.toLowerCase();
 
-      const matchesSearch = [
+      return [
         item.ITEM_ID,
         item.ITEM_NAME,
         item.CATEGORY,
@@ -56,13 +75,8 @@ function Inventory() {
       ].some((value) =>
         String(value ?? "").toLowerCase().includes(searchValue)
       );
-
-      const matchesCategory =
-        category === "all" || item.CATEGORY === category;
-
-      return matchesSearch && matchesCategory;
     });
-  }, [inventory, search, category]);
+  }, [inventory, search]);
 
   const totalProducts = inventory.length;
 
@@ -99,7 +113,7 @@ function Inventory() {
   const formatDate = (value) => {
     if (!value) return "-";
 
-    const date = new Date(value);
+    const date = new Date(String(value).replace(" ", "T"));
 
     if (Number.isNaN(date.getTime())) return String(value);
 
@@ -137,7 +151,9 @@ function Inventory() {
     return (
       <div className="inventory-message">
         <p>{error}</p>
-        <button onClick={fetchInventory}>Try again</button>
+        <button onClick={() => fetchInventory()}>
+          Try again
+        </button>
       </div>
     );
   }
@@ -155,7 +171,7 @@ function Inventory() {
 
         <button
           className="inventory-refresh"
-          onClick={fetchInventory}
+          onClick={() => fetchInventory()}
         >
           ↻ Refresh
         </button>
@@ -239,8 +255,6 @@ function Inventory() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-
-         
         </div>
 
         <div className="inventory-table-wrapper">

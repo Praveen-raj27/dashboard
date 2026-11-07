@@ -33,38 +33,43 @@ const formatDate = (value) => {
       });
 };
 
-const groupOrders = (sales) => {
+const groupOrders = (sales = []) => {
   const orders = new Map();
 
   sales.forEach((item) => {
+    if (!item.ORDER_ID) {
+      console.warn("Sales record is missing ORDER_ID:", item);
+      return;
+    }
+
     if (!orders.has(item.ORDER_ID)) {
       orders.set(item.ORDER_ID, {
         orderId: item.ORDER_ID,
-        customerName: item.CUSTOMER_NAME,
-        customerEmail: item.CUSTOMER_EMAIL,
-        customerPhone: item.CUSTOMER_PHONE,
-        shippingAddress: item.SHIPPING_ADDRESS,
-        city: item.CITY,
-        state: item.STATE,
-        pincode: item.PINCODE,
+        customerName: item.CUSTOMER_NAME || "Unknown Customer",
+        customerEmail: item.CUSTOMER_EMAIL || "",
+        customerPhone: item.CUSTOMER_PHONE || "",
+        shippingAddress: item.SHIPPING_ADDRESS || "",
+        city: item.CITY || "",
+        state: item.STATE || "",
+        pincode: item.PINCODE || "",
         subtotal: Number(item.SUBTOTAL) || 0,
         totalAmount: Number(item.TOTAL_AMOUNT) || 0,
         currency: item.CURRENCY || "INR",
-        orderStatus: item.ORDER_STATUS,
-        paymentStatus: item.PAYMENT_STATUS,
-        razorpayOrderId: item.RAZORPAY_ORDER_ID,
-        razorpayPaymentId: item.RAZORPAY_PAYMENT_ID,
-        createdAt: item.CREATED_AT,
+        orderStatus: item.ORDER_STATUS || "UNKNOWN",
+        paymentStatus: item.PAYMENT_STATUS || "UNKNOWN",
+        razorpayOrderId: item.RAZORPAY_ORDER_ID || "",
+        razorpayPaymentId: item.RAZORPAY_PAYMENT_ID || "",
+        createdAt: item.CREATED_AT || "",
         items: [],
       });
     }
 
     orders.get(item.ORDER_ID).items.push({
-      orderItemId: item.ORDER_ITEM_ID,
+      orderItemId: item.ORDER_ITEM_ID || `${item.ORDER_ID}-${item.ITEM_ID}`,
       itemId: item.ITEM_ID,
-      name: item.ITEM_NAME,
-      category: item.CATEGORY,
-      supplier: item.SUPPLIER,
+      name: item.ITEM_NAME || "Unknown Product",
+      category: item.CATEGORY || "-",
+      supplier: item.SUPPLIER || "-",
       quantity: Number(item.QUANTITY) || 0,
       unitPrice: Number(item.UNIT_PRICE) || 0,
       lineTotal: Number(item.LINE_TOTAL) || 0,
