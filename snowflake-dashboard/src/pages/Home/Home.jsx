@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getInventory } from "../services/salesService";
+import { getInventory } from "../../services/salesService";
 import "./Home.css";
 
 function Home() {

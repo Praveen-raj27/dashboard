@@ -8,7 +8,7 @@ import {
   Package,
   Activity,
 } from "lucide-react";
-import { useSales } from "../hooks/useSales";
+import { useSales } from "../../hooks/useSales";
 
 function Overview() {
   const { sales, loading, error } = useSales();

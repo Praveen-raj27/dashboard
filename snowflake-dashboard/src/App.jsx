@@ -9,15 +9,15 @@ import AppLayout from "./components/AppLayout";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Home from "./pages/Home";
+import Login from "./pages/Login/Login";
+import Register from "./pages/Register/Register";
+import Home from "./pages/Home/Home";
 
-import Overview from "./pages/Overview";
-import Sales from "./pages/Sales";
-import Analytics from "./pages/Analytics";
-import Cart from "./pages/Cart";
-import Checkout from "./pages/Checkout";
+import Overview from "./pages/Admin/Overview";
+import Sales from "./pages/Admin/Sales";
+import Analytics from "./pages/Admin/Analytics";
+import Cart from "./pages/Cart/Cart";
+import Checkout from "./pages/Checkout/Checkout";
 
 import "./index.css";
 

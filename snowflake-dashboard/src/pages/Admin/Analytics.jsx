@@ -23,9 +23,9 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-import MonthlyComparison from "../components/MonthlyComparison";
+import MonthlyComparison from "../../components/MonthlyComparison";
 
-import { useSales } from "../hooks/useSales";
+import { useSales } from "../../hooks/useSales";
 
 
 const CHART_COLORS = [

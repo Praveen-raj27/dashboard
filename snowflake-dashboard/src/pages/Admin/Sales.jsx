@@ -1,6 +1,6 @@
 
 import { useMemo, useState } from "react";
-import { useSales } from "../hooks/useSales";
+import { useSales } from "../../hooks/useSales";
 
 function Sales() {
   const { sales, loading, error } = useSales();
