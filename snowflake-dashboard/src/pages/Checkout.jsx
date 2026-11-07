@@ -407,7 +407,7 @@ function Checkout() {
             <button
               type="button"
               className="checkout-submit-button"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/home")}
             >
               Continue Shopping →
             </button>
