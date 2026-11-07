@@ -60,8 +60,8 @@ export const createOrder = async (req, res) => {
     // Read trusted prices and stock from Snowflake.
     const inventory = await executeQuery(
       `SELECT ITEM_ID, ITEM_NAME, QUANTITY, UNIT_PRICE
-       FROM INVENTORY
-       WHERE ID IN (${placeholders})`,
+   FROM INVENTORY
+   WHERE ITEM_ID IN (${placeholders})`,
       itemIds,
     );
 
