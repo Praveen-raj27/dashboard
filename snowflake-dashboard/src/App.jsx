@@ -17,6 +17,7 @@ import Overview from "./pages/Overview";
 import Sales from "./pages/Sales";
 import Analytics from "./pages/Analytics";
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
 
 import "./index.css";
 
@@ -35,6 +36,7 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={["user"]} />}>
             <Route path="/home" element={<Home />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
           </Route>
 
           {/* Admin-only routes */}

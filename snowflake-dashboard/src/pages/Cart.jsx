@@ -97,17 +97,12 @@ function Cart() {
   return (
     <main className="cart-page">
       <div className="cart-container">
-
         {/* Page Heading */}
         <div className="cart-heading">
           <div>
-            <span className="cart-eyebrow">
-              YOUR SHOPPING BAG
-            </span>
+            <span className="cart-eyebrow">YOUR SHOPPING BAG</span>
             <h1>Shopping Cart</h1>
-            <p>
-              Review your selected products before checkout.
-            </p>
+            <p>Review your selected products before checkout.</p>
           </div>
 
           <button
@@ -125,26 +120,19 @@ function Cart() {
             <div className="cart-empty-icon">🛒</div>
             <h2>Your cart is empty</h2>
             <p>
-              Looks like you haven't added anything to your
-              shopping cart yet.
+              Looks like you haven't added anything to your shopping cart yet.
             </p>
 
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-            >
+            <button type="button" onClick={() => navigate("/")}>
               Explore Products →
             </button>
           </div>
         ) : (
           <div className="cart-layout">
-
             {/* Cart Products */}
             <section className="cart-products-section">
               <div className="cart-list-heading">
-                <h2>
-                  Your Items ({totalItems})
-                </h2>
+                <h2>Your Items ({totalItems})</h2>
 
                 <button
                   type="button"
@@ -160,31 +148,20 @@ function Cart() {
                   const item = entry.item;
 
                   const id = getValue(item, "ITEM_ID");
-                  const name =
-                    getValue(item, "ITEM_NAME") ||
-                    "Unnamed Product";
+                  const name = getValue(item, "ITEM_NAME") || "Unnamed Product";
 
-                  const category =
-                    getValue(item, "CATEGORY") || "General";
+                  const category = getValue(item, "CATEGORY") || "General";
 
                   const supplier =
-                    getValue(item, "SUPPLIER") ||
-                    "Snowpify Collection";
+                    getValue(item, "SUPPLIER") || "Snowpify Collection";
 
-                  const price =
-                    Number(getValue(item, "UNIT_PRICE")) || 0;
+                  const price = Number(getValue(item, "UNIT_PRICE")) || 0;
 
-                  const stock =
-                    Number(getValue(item, "QUANTITY")) || 0;
+                  const stock = Number(getValue(item, "QUANTITY")) || 0;
 
                   return (
-                    <article
-                      className="cart-product"
-                      key={id}
-                    >
-                      <div className="cart-product-image">
-                        📦
-                      </div>
+                    <article className="cart-product" key={id}>
+                      <div className="cart-product-image">📦</div>
 
                       <div className="cart-product-details">
                         <span className="cart-product-category">
@@ -226,9 +203,7 @@ function Cart() {
                       </div>
 
                       <div className="cart-item-total">
-                        <strong>
-                          {formatPrice(price * entry.quantity)}
-                        </strong>
+                        <strong>{formatPrice(price * entry.quantity)}</strong>
 
                         <button
                           type="button"
@@ -255,9 +230,7 @@ function Cart() {
 
               <div className="cart-summary-row">
                 <span>Delivery</span>
-                <strong className="free-delivery">
-                  Free
-                </strong>
+                <strong className="free-delivery">Free</strong>
               </div>
 
               <div className="cart-summary-divider" />
@@ -270,10 +243,9 @@ function Cart() {
               <button
                 type="button"
                 className="checkout-button"
-                disabled
-                title="Checkout functionality is not connected yet"
+                onClick={() => navigate("/checkout")}
               >
-                Checkout Coming Soon
+                Proceed to Checkout →
               </button>
 
               <p className="cart-summary-note">
