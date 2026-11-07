@@ -40,12 +40,7 @@ function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="brand">
-        <div className="brand-logo">S</div>
-        <span>
-          Snow<span>lytics</span>
-        </span>
-      </div>
+     
 
       <div className="sidebar-label">WORKSPACE</div>
 
@@ -72,13 +67,7 @@ function Sidebar() {
           {connectionStatus === "disconnected" && "Snowflake disconnected"}
         </div>
 
-        <div className="user-profile">
-          <div className="avatar">P</div>
-          <div>
-            <strong>Admin User</strong>
-            <small>Administrator</small>
-          </div>
-        </div>
+        
       </div>
     </aside>
   );

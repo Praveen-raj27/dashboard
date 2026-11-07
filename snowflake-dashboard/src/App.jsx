@@ -1,6 +1,11 @@
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-
+import AppLayout from "./components/AppLayout";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -22,18 +27,23 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* User-only routes */}
-        <Route element={<ProtectedRoute allowedRoles={["user"]} />}>
-          <Route path="/home" element={<Home />} />
-        </Route>
+        {/* Authenticated routes with shared header */}
+        <Route element={<AppLayout />}>
 
-        {/* Admin-only routes */}
-        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-          <Route element={<Layout />}>
-            <Route path="/dashboard" element={<Overview />} />
-            <Route path="/sales" element={<Sales />} />
-            <Route path="/analytics" element={<Analytics />} />
+          {/* User-only routes */}
+          <Route element={<ProtectedRoute allowedRoles={["user"]} />}>
+            <Route path="/home" element={<Home />} />
           </Route>
+
+          {/* Admin-only routes */}
+          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+            <Route element={<Layout />}>
+              <Route path="/dashboard" element={<Overview />} />
+              <Route path="/sales" element={<Sales />} />
+              <Route path="/analytics" element={<Analytics />} />
+            </Route>
+          </Route>
+
         </Route>
 
         {/* Default route */}

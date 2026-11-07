@@ -224,3 +224,91 @@
     width: min(260px, calc(100vw - 32px));
   }
 }
+
+/* Header */
+.app-header {
+  width: 100%;
+  min-height: 76px;
+  padding: 0 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #25352f;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 100;
+}
+
+/* Brand */
+.app-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: #ffffff;
+  font-size: 21px;
+  font-weight: 750;
+  letter-spacing: -0.5px;
+}
+
+.app-header-brand-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: #e9b96e;
+  color: #25352f;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Profile trigger */
+.profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease;
+}
+
+.profile-trigger:hover,
+.profile-trigger.active {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e9b96e;
+  color: #25352f;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.profile-user-name {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.profile-user-role {
+  color: #c3cec6;
+  font-size: 11px;
+  text-transform: capitalize;
+}
+
+.profile-chevron {
+  color: #e9b96e;
+  font-size: 17px;
+  transition: transform 0.2s ease;
+}

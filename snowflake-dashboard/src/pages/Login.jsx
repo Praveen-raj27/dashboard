@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import "../Login.css";
 
-const API_URL =  import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
 function Login() {
   const navigate = useNavigate();
@@ -83,9 +83,12 @@ function Login() {
       // Store authentication details only after validation.
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-      const redirectPath = location.state?.from?.pathname || "/home";
-
-      navigate(redirectPath, { replace: true });
+      const role = user.role.toLowerCase();
+      if (role === "admin") {
+        navigate("/dashboard", { replace: true });
+      } else {
+        navigate("/home", { replace: true });
+      }
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");
     } finally {
