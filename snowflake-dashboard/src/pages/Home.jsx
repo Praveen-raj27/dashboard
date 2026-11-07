@@ -1,7 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import "./Home.css";
+import { useEffect } from "react";
+import { useState } from "react";
+import { getInventory } from "../services/salesService";
 
 function Home() {
+  const [inventory, setInventory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const stats = [
@@ -31,17 +37,34 @@ function Home() {
     },
   ];
 
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        setLoading(true);
+
+        const data = await getInventory();
+
+        setInventory(data);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchItems();
+  }, []);
+
   return (
     <div className="home-page">
-
       <main className="home-content">
         <section className="home-welcome">
           <div>
             <span className="home-eyebrow">YOUR WORKSPACE</span>
             <h1>Welcome to Snowpify!</h1>
             <p>
-              Here's your Snowpify workspace. Manage your business
-              and explore your latest insights.
+              Here's your Snowpify workspace. Manage your business and explore
+              your latest insights.
             </p>
           </div>
 

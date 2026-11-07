@@ -14,7 +14,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/sales", salesRoutes);
-app.use('api/inventory', inventoryRoutes)
+app.use('/api/inventory', inventoryRoutes)
 
 // Health check
 app.get("/api/health", async (req, res) => {
