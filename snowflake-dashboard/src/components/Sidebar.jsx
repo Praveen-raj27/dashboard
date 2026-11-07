@@ -50,7 +50,7 @@ function Sidebar() {
       <div className="sidebar-label">WORKSPACE</div>
 
       <nav className="sidebar-nav">
-        <NavLink to="/" end className="nav-item">
+        <NavLink to="/dashboard" end className="nav-item">
           <span>▦</span> Overview
         </NavLink>
 

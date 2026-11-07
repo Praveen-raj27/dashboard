@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import authRoutes from "./routes/auth.js";
 
 import { connectSnowflake, executeQuery } from "./snowflake.js";
 
@@ -9,6 +10,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/auth", authRoutes);
 
 // Health check
 app.get("/api/health", async (req, res) => {
@@ -97,6 +99,7 @@ app.get("/api/sales", async (req, res) => {
     });
   }
 });
+
 
 // Start backend
 const startServer = async () => {

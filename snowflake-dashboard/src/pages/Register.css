@@ -1,0 +1,122 @@
+
+.register-card {
+  max-width: 100%;
+}
+
+.register-card .login-heading {
+  margin-bottom: 28px;
+}
+
+.register-card .login-field {
+  margin-bottom: 20px;
+}
+
+.register-card .login-input-wrapper {
+  min-height: 54px;
+}
+
+.register-card .login-input-wrapper svg {
+  width: 21px;
+  height: 21px;
+  min-width: 21px;
+  flex-shrink: 0;
+}
+
+.register-card .password-toggle {
+  border: none;
+  background: transparent;
+  color: #155e59;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px;
+}
+
+.register-card .password-toggle:hover {
+  color: #25352f;
+}
+
+.register-card .login-submit {
+  margin-top: 12px;
+}
+
+.register-login-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 24px;
+  font-size: 13px;
+  color: #66756e;
+    text-decoration: none;
+}
+
+.register-login-link a {
+  color: #155e59;
+  font-weight: 700;
+
+}
+
+
+
+.register-success {
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border: 1px solid #b9dfce;
+  border-radius: 8px;
+  background: #e5f1ed;
+  color: #155e59;
+  font-size: 13px;
+}
+
+@media (max-width: 480px) {
+  .register-card .login-heading {
+    margin-bottom: 22px;
+  }
+
+  .register-card .login-field {
+    margin-bottom: 17px;
+  }
+
+  .register-login-link {
+    margin-top: 20px;
+  }
+}
+.register-button {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  border: 1px solid #155e59;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #155e59;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-decoration: none;
+}
+
+.register-button:hover {
+  background: #e5f1ed;
+  transform: translateY(-1px);
+}
+/* Disabled registration */
+.register-button.register-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: #f4f1e9;
+  border-color: #e6e4db;
+  color: #929d96;
+  transform: none;
+}
+
+.register-button.register-disabled:hover {
+  background: #f4f1e9;
+  transform: none;
+}
