@@ -40,8 +40,6 @@ function Sidebar() {
 
   return (
     <aside className="sidebar">
-     
-
       <div className="sidebar-label">WORKSPACE</div>
 
       <nav className="sidebar-nav">
@@ -56,6 +54,10 @@ function Sidebar() {
         <NavLink to="/analytics" className="nav-item">
           <span>◫</span> Analytics
         </NavLink>
+        <NavLink to="/inventory" className="nav-item">
+          <span>▦</span>
+          Inventory
+        </NavLink>
       </nav>
 
       <div className="sidebar-bottom">
@@ -66,8 +68,6 @@ function Sidebar() {
           {connectionStatus === "connected" && "Snowflake connected"}
           {connectionStatus === "disconnected" && "Snowflake disconnected"}
         </div>
-
-        
       </div>
     </aside>
   );

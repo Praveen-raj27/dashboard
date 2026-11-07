@@ -16,8 +16,10 @@ import Home from "./pages/Home/Home";
 import Overview from "./pages/Admin/Overview";
 import Sales from "./pages/Admin/Sales";
 import Analytics from "./pages/Admin/Analytics";
+import Inventory from "./pages/Admin/Inventory";
 import Cart from "./pages/Cart/Cart";
 import Checkout from "./pages/Checkout/Checkout";
+
 
 import "./index.css";
 
@@ -45,6 +47,7 @@ function App() {
               <Route path="/dashboard" element={<Overview />} />
               <Route path="/sales" element={<Sales />} />
               <Route path="/analytics" element={<Analytics />} />
+              <Route path="/inventory" element={<Inventory />} />
             </Route>
           </Route>
 

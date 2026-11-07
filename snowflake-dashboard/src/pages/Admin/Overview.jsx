@@ -1,78 +1,138 @@
-
 import { useMemo } from "react";
 import {
   IndianRupee,
   ShoppingCart,
-  TrendingUp,
-  Layers,
+  BadgeCheck,
   Package,
+  Users,
   Activity,
 } from "lucide-react";
 import { useSales } from "../../hooks/useSales";
 
+const currency = (value) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(value || 0);
+
+const formatDate = (value) => {
+  if (!value) return "-";
+
+  // Snowflake returns timestamps like "2026-11-07 07:01:35.358"
+  const date = new Date(String(value).replace(" ", "T"));
+
+  return Number.isNaN(date.getTime())
+    ? String(value)
+    : date.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+};
+
+const groupOrders = (sales) => {
+  const orders = new Map();
+
+  sales.forEach((item) => {
+    if (!orders.has(item.ORDER_ID)) {
+      orders.set(item.ORDER_ID, {
+        orderId: item.ORDER_ID,
+        customerName: item.CUSTOMER_NAME,
+        customerEmail: item.CUSTOMER_EMAIL,
+        city: item.CITY,
+        state: item.STATE,
+        totalAmount: Number(item.TOTAL_AMOUNT) || 0,
+        orderStatus: item.ORDER_STATUS,
+        paymentStatus: item.PAYMENT_STATUS,
+        createdAt: item.CREATED_AT,
+        items: [],
+      });
+    }
+
+    orders.get(item.ORDER_ID).items.push({
+      name: item.ITEM_NAME,
+      quantity: Number(item.QUANTITY) || 0,
+      lineTotal: Number(item.LINE_TOTAL) || 0,
+    });
+  });
+
+  return [...orders.values()].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
+};
+
 function Overview() {
   const { sales, loading, error } = useSales();
 
-  const totalRevenue = useMemo(
-    () => sales.reduce((sum, item) => sum + Number(item.AMOUNT || 0), 0),
-    [sales]
-  );
+  const { orders, stats } = useMemo(() => {
+    const groupedOrders = groupOrders(sales);
 
-  const averageOrder = sales.length
-    ? totalRevenue / sales.length
-    : 0;
+    const paidOrders = groupedOrders.filter(
+      (order) => order.PAYMENT_STATUS === "PAID"
+    );
 
-  const categoryCount = useMemo(
-    () => new Set(sales.map((item) => item.CATEGORY)).size,
-    [sales]
-  );
+    const totalRevenue = paidOrders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0
+    );
 
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(value);
+    const unitsSold = paidOrders.reduce(
+      (sum, order) =>
+        sum +
+        order.items.reduce((itemSum, item) => itemSum + item.quantity, 0),
+      0
+    );
 
-  const stats = [
-    {
-      label: "Total Revenue",
-      value: formatCurrency(totalRevenue),
-      description: "Across all sales records",
-      Icon: IndianRupee,
-      color: "purple",
-    },
-    {
-      label: "Total Orders",
-      value: sales.length.toLocaleString("en-IN"),
-      description: "Total transactions",
-      Icon: ShoppingCart,
-      color: "blue",
-    },
-    {
-      label: "Average Order Value",
-      value: formatCurrency(averageOrder),
-      description: "Revenue per transaction",
-      Icon: TrendingUp,
-      color: "green",
-    },
-    {
-      label: "Categories",
-      value: categoryCount,
-      description: "Active product categories",
-      Icon: Layers,
-      color: "orange",
-    },
-  ];
+    const customers = new Set(
+      paidOrders.map((order) => order.customerEmail || order.customerName)
+    );
+
+    return {
+      orders: groupedOrders,
+      stats: [
+        {
+          label: "Total Revenue",
+          value: currency(totalRevenue),
+          description: "Revenue from successful payments",
+          Icon: IndianRupee,
+          color: "purple",
+        },
+        {
+          label: "Total Orders",
+          value: groupedOrders.length.toLocaleString("en-IN"),
+          description: "All orders received",
+          Icon: ShoppingCart,
+          color: "blue",
+        },
+        {
+          label: "Paid Orders",
+          value: paidOrders.length.toLocaleString("en-IN"),
+          description: "Successfully completed payments",
+          Icon: BadgeCheck,
+          color: "green",
+        },
+        {
+          label: "Units Sold",
+          value: unitsSold.toLocaleString("en-IN"),
+          description: `${customers.size} unique paid customers`,
+          Icon: Package,
+          color: "orange",
+        },
+      ],
+    };
+  }, [sales]);
 
   if (loading) {
-    return <div className="page-message">
-    <div className="loading-content">
-      <div className="loading-spinner"></div>
-      <p>Loading overview</p>
-      <span>Fetching your sales insights...</span>
-    </div>
-  </div>
+    return (
+      <div className="page-message">
+        <div className="loading-content">
+          <div className="loading-spinner" />
+          <p>Loading overview</p>
+          <span>Fetching your order insights...</span>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -85,7 +145,7 @@ function Overview() {
         <div>
           <div className="breadcrumb">Workspace / Overview</div>
           <h1>Sales Overview</h1>
-          <p>Monitor your business performance and sales activity.</p>
+          <p>Monitor your orders, revenue, and customer activity.</p>
         </div>
 
         <div className="topbar-right">
@@ -104,13 +164,11 @@ function Overview() {
         </div>
       </header>
 
-      {/* KPI cards */}
       <section className="stats-grid">
         {stats.map(({ label, value, description, Icon, color }) => (
           <div className="stat-card" key={label}>
             <div className="stat-heading">
               <span>{label}</span>
-
               <div className={`stat-icon ${color}`}>
                 <Icon size={19} />
               </div>
@@ -122,16 +180,15 @@ function Overview() {
         ))}
       </section>
 
-      {/* Recent sales */}
       <section className="panel sales-panel">
         <div className="panel-header">
           <div>
-            <h3>Recent Sales</h3>
-            <p>Explore and manage your sales transactions</p>
+            <h3>Recent Orders</h3>
+            <p>Latest customer orders and payment activity</p>
           </div>
 
           <span className="record-count">
-            {sales.length} records
+            {orders.length} orders
           </span>
         </div>
 
@@ -139,52 +196,65 @@ function Overview() {
           <table className="sales-table">
             <thead>
               <tr>
-                <th>PRODUCT</th>
-                <th>CATEGORY</th>
-                <th>REGION</th>
-                <th>SALE DATE</th>
-                <th className="amount-column">AMOUNT</th>
+                <th>ORDER</th>
+                <th>CUSTOMER</th>
+                <th>PRODUCTS</th>
+                <th>DATE</th>
+                <th>PAYMENT</th>
+                <th className="amount-column">TOTAL</th>
               </tr>
             </thead>
 
             <tbody>
-              {sales.slice(0, 5).map((item) => (
-                <tr key={item.ID}>
+              {orders.slice(0, 5).map((order) => (
+                <tr key={order.orderId}>
+                  <td>
+                    <strong>#{order?.orderId?.slice(0, 8)}</strong>
+                  </td>
+
                   <td>
                     <div className="product-cell">
-                      <div className="product-avatar">
-                        <Package size={16} />
+                      <div>
+                        <strong>{order.customerName}</strong>
+                        <p className="customer-subtext">
+                          {order.customerEmail}
+                        </p>
                       </div>
-                      <strong>{item.PRODUCT_NAME}</strong>
                     </div>
                   </td>
 
                   <td>
-                    <span className="category-badge">
-                      {item.CATEGORY}
+                    <div>
+                      {order.items.map((item, index) => (
+                        <div key={`${item.name}-${index}`}>
+                          {item.name} × {item.quantity}
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+
+                  <td>{formatDate(order.createdAt)}</td>
+
+                  <td>
+                    <span
+                      className={`status-badge ${
+                        order.paymentStatus === "PAID" ? "success" : "pending"
+                      }`}
+                    >
+                      {order.paymentStatus}
                     </span>
                   </td>
 
-                  <td>{item.REGION}</td>
-
-                  <td>
-                    {item.SALE_DATE
-                      ? new Date(item.SALE_DATE).toLocaleDateString("en-IN")
-                      : "-"}
-                  </td>
-
                   <td className="amount-column">
-                    <strong>
-                      {formatCurrency(Number(item.AMOUNT || 0))}
-                    </strong>
+                    <strong>{currency(order.totalAmount)}</strong>
                   </td>
                 </tr>
               ))}
 
-              {sales.length === 0 && (
+              {orders.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="empty-table">
-                    No sales records available.
+                  <td colSpan="6" className="empty-table">
+                    No orders available.
                   </td>
                 </tr>
               )}
