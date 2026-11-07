@@ -9,7 +9,7 @@ export const getInventory = async (req, res) => {
       data: inventory,
     });
   } catch (err) {
-    console.error("Inventory API error:", error.message);
+    console.error("Inventory API error:", err.message);
 
     res.status(500).json({
       success: false,
