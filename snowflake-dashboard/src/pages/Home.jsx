@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getInventory } from "../services/salesService";
@@ -11,13 +10,31 @@ function Home() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [sortBy, setSortBy] = useState("default");
-  const [cart, setCart] = useState({});
+ const [cart, setCart] = useState(() => {
+  try {
+    const savedCart = JSON.parse(
+      localStorage.getItem("snowpify_cart") || "[]"
+    );
+
+    return savedCart.reduce((result, entry) => {
+      const id =
+        entry.item?.ITEM_ID ?? entry.item?.item_id;
+
+      if (id != null) {
+        result[id] = Number(entry.quantity) || 0;
+      }
+
+      return result;
+    }, {});
+  } catch {
+    return {};
+  }
+});
 
   const navigate = useNavigate();
 
   // Supports uppercase Snowflake columns and lowercase API fields
-  const getValue = (item, key) =>
-    item[key] ?? item[key.toLowerCase()] ?? "";
+  const getValue = (item, key) => item[key] ?? item[key.toLowerCase()] ?? "";
 
   const fetchItems = async () => {
     try {
@@ -33,6 +50,29 @@ function Home() {
   };
 
   useEffect(() => {
+  if (loading || inventory.length === 0) return;
+
+  const savedCart = inventory
+    .filter((item) => {
+      const id = getValue(item, "ITEM_ID");
+      return cart[id] > 0;
+    })
+    .map((item) => {
+      const id = getValue(item, "ITEM_ID");
+
+      return {
+        item,
+        quantity: cart[id],
+      };
+    });
+
+  localStorage.setItem(
+    "snowpify_cart",
+    JSON.stringify(savedCart)
+  );
+}, [cart, inventory, loading]);
+
+  useEffect(() => {
     fetchItems();
   }, []);
 
@@ -40,9 +80,7 @@ function Home() {
     return [
       "All",
       ...new Set(
-        inventory
-          .map((item) => getValue(item, "CATEGORY"))
-          .filter(Boolean)
+        inventory.map((item) => getValue(item, "CATEGORY")).filter(Boolean),
       ),
     ];
   }, [inventory]);
@@ -52,12 +90,9 @@ function Home() {
       const name = String(getValue(item, "ITEM_NAME"));
       const itemCategory = String(getValue(item, "CATEGORY"));
 
-      const matchesSearch = name
-        .toLowerCase()
-        .includes(search.toLowerCase());
+      const matchesSearch = name.toLowerCase().includes(search.toLowerCase());
 
-      const matchesCategory =
-        category === "All" || itemCategory === category;
+      const matchesCategory = category === "All" || itemCategory === category;
 
       return matchesSearch && matchesCategory;
     });
@@ -65,20 +100,18 @@ function Home() {
     if (sortBy === "price-low") {
       products.sort(
         (a, b) =>
-          Number(getValue(a, "UNIT_PRICE")) -
-          Number(getValue(b, "UNIT_PRICE"))
+          Number(getValue(a, "UNIT_PRICE")) - Number(getValue(b, "UNIT_PRICE")),
       );
     } else if (sortBy === "price-high") {
       products.sort(
         (a, b) =>
-          Number(getValue(b, "UNIT_PRICE")) -
-          Number(getValue(a, "UNIT_PRICE"))
+          Number(getValue(b, "UNIT_PRICE")) - Number(getValue(a, "UNIT_PRICE")),
       );
     } else if (sortBy === "name") {
       products.sort((a, b) =>
         String(getValue(a, "ITEM_NAME")).localeCompare(
-          String(getValue(b, "ITEM_NAME"))
-        )
+          String(getValue(b, "ITEM_NAME")),
+        ),
       );
     }
 
@@ -95,7 +128,7 @@ function Home() {
 
       const nextQuantity = Math.max(
         0,
-        Math.min(currentQuantity + change, stock)
+        Math.min(currentQuantity + change, stock),
       );
 
       const updated = { ...previous };
@@ -113,24 +146,19 @@ function Home() {
   // Cart total quantity
   const totalCartItems = Object.values(cart).reduce(
     (total, quantity) => total + quantity,
-    0
+    0,
   );
 
   // Cart total price
   const cartTotal = inventory.reduce((total, item) => {
     const id = getValue(item, "ITEM_ID");
 
-    return (
-      total +
-      (cart[id] || 0) *
-        Number(getValue(item, "UNIT_PRICE") || 0)
-    );
+    return total + (cart[id] || 0) * Number(getValue(item, "UNIT_PRICE") || 0);
   }, 0);
 
   const totalUnits = inventory.reduce(
-    (total, item) =>
-      total + Number(getValue(item, "QUANTITY") || 0),
-    0
+    (total, item) => total + Number(getValue(item, "QUANTITY") || 0),
+    0,
   );
 
   const totalValue = inventory.reduce(
@@ -138,7 +166,7 @@ function Home() {
       total +
       Number(getValue(item, "QUANTITY") || 0) *
         Number(getValue(item, "UNIT_PRICE") || 0),
-    0
+    0,
   );
 
   const formatPrice = (price) =>
@@ -167,9 +195,7 @@ function Home() {
         {/* Hero */}
         <section className="store-hero">
           <div className="store-hero-content">
-            <span className="store-hero-label">
-              DISCOVER OUR COLLECTION
-            </span>
+            <span className="store-hero-label">DISCOVER OUR COLLECTION</span>
 
             <h1>
               Everything you need.
@@ -178,8 +204,7 @@ function Home() {
             </h1>
 
             <p>
-              Explore our product collection and discover
-              something you'll love.
+              Explore our product collection and discover something you'll love.
             </p>
 
             <a href="#products" className="store-hero-button">
@@ -191,9 +216,7 @@ function Home() {
             <div className="store-art-circle">
               <span>✦</span>
               <div className="store-art-box">S</div>
-              <div className="store-art-caption">
-                QUALITY COLLECTION
-              </div>
+              <div className="store-art-caption">QUALITY COLLECTION</div>
             </div>
           </div>
         </section>
@@ -215,8 +238,6 @@ function Home() {
               <span>Available Units</span>
             </div>
           </div>
-
-         
         </section>
 
         {/* Categories */}
@@ -280,28 +301,28 @@ function Home() {
           {/* Cart Summary */}
           {totalCartItems > 0 && (
             <div className="store-cart-summary">
-  <div className="store-cart-info">
-    <span className="store-cart-icon">🛒</span>
+              <div className="store-cart-info">
+                <span className="store-cart-icon">🛒</span>
 
-    <div>
-      <strong>
-        {totalCartItems} {totalCartItems === 1 ? "Item" : "Items"}
-      </strong>
-      <span>{formatPrice(cartTotal)}</span>
-    </div>
-  </div>
+                <div>
+                  <strong>
+                    {totalCartItems} {totalCartItems === 1 ? "Item" : "Items"}
+                  </strong>
+                  <span>{formatPrice(cartTotal)}</span>
+                </div>
+              </div>
 
-  <button
-    type="button"
-    className="view-cart-icon"
-    onClick={() => navigate("/cart")}
-    aria-label="View shopping cart"
-    title="View Cart"
-  >
-    <span>🛒</span>
-    <span className="cart-count">{totalCartItems}</span>
-  </button>
-</div>
+              <button
+                type="button"
+                className="view-cart-icon"
+                onClick={() => navigate("/cart")}
+                aria-label="View shopping cart"
+                title="View Cart"
+              >
+                <span>🛒</span>
+                <span className="cart-count">{totalCartItems}</span>
+              </button>
+            </div>
           )}
 
           {loading ? (
@@ -335,8 +356,7 @@ function Home() {
                 const id = getValue(item, "ITEM_ID");
                 const name = getValue(item, "ITEM_NAME");
                 const itemCategory = getValue(item, "CATEGORY");
-                const quantity =
-                  Number(getValue(item, "QUANTITY")) || 0;
+                const quantity = Number(getValue(item, "QUANTITY")) || 0;
                 const price = getValue(item, "UNIT_PRICE");
                 const selectedQuantity = cart[id] || 0;
 
@@ -362,8 +382,7 @@ function Home() {
 
                     <div className="product-details">
                       <span className="product-supplier">
-                        {getValue(item, "SUPPLIER") ||
-                          "Snowpify Collection"}
+                        {getValue(item, "SUPPLIER") || "Snowpify Collection"}
                       </span>
 
                       <h3>{name || "Unnamed Product"}</h3>
@@ -412,9 +431,7 @@ function Home() {
                           onClick={() => updateCart(item, 1)}
                           disabled={quantity <= 0}
                         >
-                          {quantity <= 0
-                            ? "Out of Stock"
-                            : "Add to Cart +"}
+                          {quantity <= 0 ? "Out of Stock" : "Add to Cart +"}
                         </button>
                       )}
                     </div>

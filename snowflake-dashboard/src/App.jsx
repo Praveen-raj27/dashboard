@@ -16,6 +16,7 @@ import Home from "./pages/Home";
 import Overview from "./pages/Overview";
 import Sales from "./pages/Sales";
 import Analytics from "./pages/Analytics";
+import Cart from "./pages/Cart";
 
 import "./index.css";
 
@@ -33,6 +34,7 @@ function App() {
           {/* User-only routes */}
           <Route element={<ProtectedRoute allowedRoles={["user"]} />}>
             <Route path="/home" element={<Home />} />
+            <Route path="/cart" element={<Cart />} />
           </Route>
 
           {/* Admin-only routes */}
