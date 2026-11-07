@@ -1,5 +1,5 @@
 
-import { executeQuery } from "../config/snowflake";
+import { executeQuery } from "../config/snowflake.js";
 
 export const fetchSales = async ({
   startDate,
