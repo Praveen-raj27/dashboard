@@ -1,8 +1,9 @@
 import express from "express";
 import cors from "cors";
-import authRoutes from "./routes/auth.js";
+import authRoutes from "./routes/auth.routes.js";
+import salesRoutes from "./routes/sales.routes.js";
 
-import { connectSnowflake, executeQuery } from "./snowflake.js";
+import { connectSnowflake, executeQuery } from "./config/snowflake.js";
 
 const PORT = process.env.PORT || 5001;
 
@@ -11,6 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.use("/api/sales", salesRoutes);
 
 // Health check
 app.get("/api/health", async (req, res) => {
@@ -37,68 +39,6 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
-// Get filtered sales
-
-app.get("/api/sales", async (req, res) => {
-  try {
-    const { startDate, endDate, category, region } = req.query;
-
-    let query = `
-      SELECT
-        ID,
-        PRODUCT_NAME,
-        CATEGORY,
-        AMOUNT,
-        REGION,
-        SALE_DATE
-      FROM SALES
-    `;
-
-    const conditions = [];
-    const binds = [];
-
-    if (startDate) {
-      conditions.push("SALE_DATE >= TO_DATE(?)");
-      binds.push(startDate);
-    }
-
-    if (endDate) {
-      conditions.push("SALE_DATE <= TO_DATE(?)");
-      binds.push(endDate);
-    }
-
-    if (category) {
-      conditions.push("CATEGORY = ?");
-      binds.push(category);
-    }
-
-    if (region) {
-      conditions.push("REGION = ?");
-      binds.push(region);
-    }
-
-    if (conditions.length > 0) {
-      query += ` WHERE ${conditions.join(" AND ")}`;
-    }
-
-    query += " ORDER BY SALE_DATE DESC";
-
-    const sales = await executeQuery(query, binds);
-
-    res.status(200).json({
-      success: true,
-      count: sales.length,
-      data: sales,
-    });
-  } catch (error) {
-    console.error("Sales API error:", error.message);
-
-    res.status(500).json({
-      success: false,
-      message: "Unable to fetch sales data",
-    });
-  }
-});
 
 
 // Start backend

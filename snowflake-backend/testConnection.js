@@ -1,7 +1,7 @@
 import {
   connectSnowflake,
   executeQuery,
-} from "./snowflake.js";
+} from "./config/snowflake.js";
 
 const testConnection = async () => {
   try {

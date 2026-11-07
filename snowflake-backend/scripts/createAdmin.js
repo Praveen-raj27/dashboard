@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
-import { connectSnowflake, executeQuery } from "../snowflake.js";
+import { connectSnowflake, executeQuery } from "../config/snowflake";
 
 dotenv.config();
 
