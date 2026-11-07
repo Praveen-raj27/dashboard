@@ -10,26 +10,25 @@ function Home() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [sortBy, setSortBy] = useState("default");
- const [cart, setCart] = useState(() => {
-  try {
-    const savedCart = JSON.parse(
-      localStorage.getItem("snowpify_cart") || "[]"
-    );
+  const [cart, setCart] = useState(() => {
+    try {
+      const savedCart = JSON.parse(
+        localStorage.getItem("snowpify_cart") || "[]",
+      );
 
-    return savedCart.reduce((result, entry) => {
-      const id =
-        entry.item?.ITEM_ID ?? entry.item?.item_id;
+      return savedCart.reduce((result, entry) => {
+        const id = entry.item?.ITEM_ID ?? entry.item?.item_id;
 
-      if (id != null) {
-        result[id] = Number(entry.quantity) || 0;
-      }
+        if (id != null) {
+          result[id] = Number(entry.quantity) || 0;
+        }
 
-      return result;
-    }, {});
-  } catch {
-    return {};
-  }
-});
+        return result;
+      }, {});
+    } catch {
+      return {};
+    }
+  });
 
   const navigate = useNavigate();
 
@@ -50,27 +49,24 @@ function Home() {
   };
 
   useEffect(() => {
-  if (loading || inventory.length === 0) return;
+    if (loading || inventory.length === 0) return;
 
-  const savedCart = inventory
-    .filter((item) => {
-      const id = getValue(item, "ITEM_ID");
-      return cart[id] > 0;
-    })
-    .map((item) => {
-      const id = getValue(item, "ITEM_ID");
+    const savedCart = inventory
+      .filter((item) => {
+        const id = getValue(item, "ITEM_ID");
+        return cart[id] > 0;
+      })
+      .map((item) => {
+        const id = getValue(item, "ITEM_ID");
 
-      return {
-        item,
-        quantity: cart[id],
-      };
-    });
+        return {
+          item,
+          quantity: cart[id],
+        };
+      });
 
-  localStorage.setItem(
-    "snowpify_cart",
-    JSON.stringify(savedCart)
-  );
-}, [cart, inventory, loading]);
+    localStorage.setItem("snowpify_cart", JSON.stringify(savedCart));
+  }, [cart, inventory, loading]);
 
   useEffect(() => {
     fetchItems();
