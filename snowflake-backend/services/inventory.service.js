@@ -4,7 +4,7 @@ import { executeQuery } from "../config/snowflake.js";
 export const fetchInventory = async () => {
   const query = `
     SELECT
-      ID,
+      ITEM_ID,
       ITEM_NAME,
       CATEGORY,
       QUANTITY,
