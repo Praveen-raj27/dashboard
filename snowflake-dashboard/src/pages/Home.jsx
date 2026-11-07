@@ -1,18 +1,9 @@
-
 import { useNavigate } from "react-router-dom";
-import { useMemo } from "react";
+import Header from "../components/Header";
 import "./Home.css";
 
 function Home() {
   const navigate = useNavigate();
-
-  const user = useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem("user") || "{}");
-    } catch {
-      return {};
-    }
-  }, []);
 
   const stats = [
     {
@@ -43,34 +34,13 @@ function Home() {
 
   return (
     <div className="home-page">
-      <header className="home-header">
-        <div className="home-brand">
-          <div className="home-brand-icon">S</div>
-          <span>Snowpify</span>
-        </div>
-
-        <div className="home-user">
-          <div className="home-avatar">
-            {(user.name || "U").charAt(0).toUpperCase()}
-          </div>
-          <div className="home-user-details">
-            <span className="home-user-name">
-              {user.name || "User"}
-            </span>
-            <span className="home-user-role">
-              {user.role || "User"}
-            </span>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main className="home-content">
         <section className="home-welcome">
           <div>
             <span className="home-eyebrow">YOUR WORKSPACE</span>
-            <h1>
-              Welcome back, {user.name?.split(" ")[0] || "there"}!
-            </h1>
+            <h1>Welcome to Snowpify!</h1>
             <p>
               Here's your Snowpify workspace. Manage your business
               and explore your latest insights.
