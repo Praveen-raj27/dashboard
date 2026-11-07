@@ -1,8 +1,8 @@
-import { fecthInventory } from "../services/inventory.service.js";
+import { fetchInventory } from "../services/inventory.service.js";
 
 export const getInventory = async (req, res) => {
   try {
-    const inventory = await fecthInventory();
+    const inventory = await fetchInventory();
     res.status(200).json({
       success: true,
       count: inventory.length,
