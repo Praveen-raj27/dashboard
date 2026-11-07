@@ -368,7 +368,7 @@ function Checkout() {
 
           <button
             type="button"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/home")}
           >
             Explore Products →
           </button>
