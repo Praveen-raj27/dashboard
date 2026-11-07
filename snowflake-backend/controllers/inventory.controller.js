@@ -1,4 +1,4 @@
-import { fecthInventory } from "../services/inventory.service";
+import { fecthInventory } from "../services/inventory.service.js";
 
 export const getInventory = async (req, res) => {
   try {
