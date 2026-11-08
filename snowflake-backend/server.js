@@ -4,6 +4,7 @@ import authRoutes from "./routes/auth.routes.js";
 import salesRoutes from "./routes/sales.routes.js";
 import inventoryRoutes from "./routes/inventory.routes.js";
 import orderRoutes from "./routes/order.routes.js";
+import passwordResetRoutes from "./routes/passwordReset.routes.js";
 
 import { connectSnowflake, executeQuery } from "./config/snowflake.js";
 
@@ -17,6 +18,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/sales", salesRoutes);
 app.use('/api/inventory', inventoryRoutes)
 app.use("/api/orders", orderRoutes);
+app.use("/api/auth", passwordResetRoutes);
 
 // Health check
 app.get("/api/health", async (req, res) => {

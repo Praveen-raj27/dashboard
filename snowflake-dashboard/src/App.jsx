@@ -1,9 +1,4 @@
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import AppLayout from "./components/AppLayout";
 import Layout from "./components/Layout";
@@ -19,7 +14,8 @@ import Analytics from "./pages/Admin/Analytics";
 import Inventory from "./pages/Admin/Inventory";
 import Cart from "./pages/Cart/Cart";
 import Checkout from "./pages/Checkout/Checkout";
-
+import ForgotPassword from "./pages/Login/ForgotPassword";
+import ResetPassword from "./pages/Login/ResetPassword";
 
 import "./index.css";
 
@@ -30,10 +26,11 @@ function App() {
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Authenticated routes with shared header */}
         <Route element={<AppLayout />}>
-
           {/* User-only routes */}
           <Route element={<ProtectedRoute allowedRoles={["user"]} />}>
             <Route path="/home" element={<Home />} />
@@ -50,7 +47,6 @@ function App() {
               <Route path="/inventory" element={<Inventory />} />
             </Route>
           </Route>
-
         </Route>
 
         {/* Default route */}
