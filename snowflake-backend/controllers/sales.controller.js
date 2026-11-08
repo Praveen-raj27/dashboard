@@ -1,15 +1,17 @@
-
 import { fetchSales } from "../services/sales.service.js";
 
 export const getSales = async (req, res) => {
   try {
-    const { startDate, endDate, category, region } = req.query;
+    const {
+      category,
+      supplier,
+      paymentStatus,
+    } = req.query;
 
     const sales = await fetchSales({
-      startDate,
-      endDate,
       category,
-      region,
+      supplier,
+      paymentStatus,
     });
 
     res.status(200).json({

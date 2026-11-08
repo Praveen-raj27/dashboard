@@ -1,26 +1,38 @@
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { Filter, RotateCcw } from "lucide-react";
 
-import { useEffect, useState } from "react";
-import { CalendarDays, Filter, RotateCcw } from "lucide-react";
 import { useFilters } from "../context/FilterContext";
-import { getSales } from "../services/salesService";
+import { getInventory } from "../services/salesService";
 
 export default function GlobalFilters() {
+  const location = useLocation();
+
   const { filters, updateFilters, resetFilters } = useFilters();
 
-  const [localFilters, setLocalFilters] = useState(filters);
-  const [allSales, setAllSales] = useState([]);
+  const isInventoryPage = location.pathname
+    .toLowerCase()
+    .includes("inventory");
 
-  // Fetch complete dataset for dropdown options
+  const [localFilters, setLocalFilters] = useState(filters);
+  const [allInventory, setAllInventory] = useState([]);
+
+  // Fetch all inventory records for Category and Supplier options.
   useEffect(() => {
     const controller = new AbortController();
 
-    getSales({}, controller.signal)
-      .then(setAllSales)
-      .catch((err) => {
-        if (err.name !== "AbortError") {
-          console.error("Filter options error:", err);
+    const fetchFilterOptions = async () => {
+      try {
+        const data = await getInventory({}, controller.signal);
+        setAllInventory(Array.isArray(data) ? data : []);
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("Filter options error:", error);
         }
-      });
+      }
+    };
+
+    fetchFilterOptions();
 
     return () => controller.abort();
   }, []);
@@ -29,13 +41,37 @@ export default function GlobalFilters() {
     setLocalFilters(filters);
   }, [filters]);
 
-  const categories = [
-    ...new Set(allSales.map((sale) => sale.CATEGORY).filter(Boolean)),
-  ];
+  const categories = useMemo(() => {
+    return [
+      ...new Set(
+        allInventory.map((item) => item.CATEGORY).filter(Boolean)
+      ),
+    ].sort();
+  }, [allInventory]);
 
-  const regions = [
-    ...new Set(allSales.map((sale) => sale.REGION).filter(Boolean)),
-  ];
+  const suppliers = useMemo(() => {
+    return [
+      ...new Set(
+        allInventory.map((item) => item.SUPPLIER).filter(Boolean)
+      ),
+    ].sort();
+  }, [allInventory]);
+
+  const statusField = isInventoryPage
+    ? "stockStatus"
+    : "paymentStatus";
+
+  const statusOptions = isInventoryPage
+    ? [
+        { value: "IN_STOCK", label: "In Stock" },
+        { value: "LOW_STOCK", label: "Low Stock" },
+        { value: "OUT_OF_STOCK", label: "Out of Stock" },
+      ]
+    : [
+        { value: "PAID", label: "Paid" },
+        { value: "PENDING", label: "Pending" },
+        { value: "FAILED", label: "Failed" },
+      ];
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -53,10 +89,10 @@ export default function GlobalFilters() {
   const handleReset = () => {
     resetFilters();
     setLocalFilters({
-      startDate: "",
-      endDate: "",
       category: "",
-      region: "",
+      supplier: "",
+      paymentStatus: "",
+      stockStatus: "",
     });
   };
 
@@ -69,41 +105,18 @@ export default function GlobalFilters() {
 
         <div>
           <h3>Filters</h3>
-          <p>Refine your sales data</p>
+          <p>
+            {isInventoryPage
+              ? "Refine your inventory"
+              : "Refine your sales data"}
+          </p>
         </div>
       </div>
 
       <div className="filter-controls">
         <div className="filter-field">
-          <label>Start Date</label>
-          <div className="filter-input">
-            <CalendarDays size={15} />
-            <input
-              type="date"
-              name="startDate"
-              value={localFilters.startDate}
-              max={localFilters.endDate || undefined}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
-
-        <div className="filter-field">
-          <label>End Date</label>
-          <div className="filter-input">
-            <CalendarDays size={15} />
-            <input
-              type="date"
-              name="endDate"
-              value={localFilters.endDate}
-              min={localFilters.startDate || undefined}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
-
-        <div className="filter-field">
           <label>Category</label>
+
           <select
             name="category"
             value={localFilters.category}
@@ -120,17 +133,40 @@ export default function GlobalFilters() {
         </div>
 
         <div className="filter-field">
-          <label>Region</label>
+          <label>Supplier</label>
+
           <select
-            name="region"
-            value={localFilters.region}
+            name="supplier"
+            value={localFilters.supplier}
             onChange={handleChange}
           >
-            <option value="">All Regions</option>
+            <option value="">All Suppliers</option>
 
-            {regions.map((region) => (
-              <option key={region} value={region}>
-                {region}
+            {suppliers.map((supplier) => (
+              <option key={supplier} value={supplier}>
+                {supplier}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filter-field">
+          <label>
+            {isInventoryPage ? "Stock Status" : "Payment Status"}
+          </label>
+
+          <select
+            name={statusField}
+            value={localFilters[statusField]}
+            onChange={handleChange}
+          >
+            <option value="">
+              {isInventoryPage ? "All Stock Statuses" : "All Payments"}
+            </option>
+
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
@@ -138,6 +174,7 @@ export default function GlobalFilters() {
 
         <div className="filter-actions">
           <button
+            type="button"
             className="filter-apply-btn"
             onClick={handleApply}
           >
@@ -145,6 +182,7 @@ export default function GlobalFilters() {
           </button>
 
           <button
+            type="button"
             className="filter-reset-btn"
             onClick={handleReset}
           >

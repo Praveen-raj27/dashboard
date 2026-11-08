@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useCallback, useState } from "react";
 import { getInventory } from "../../services/salesService";
 import { useFilters } from "../../context/FilterContext";
@@ -7,7 +6,11 @@ import "./Admin.css";
 function Inventory() {
   const { filters } = useFilters();
 
-  const { startDate, endDate, category: globalCategory } = filters;
+  const {
+    category,
+    supplier,
+    stockStatus,
+  } = filters;
 
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,9 +24,9 @@ function Inventory() {
 
       const result = await getInventory(
         {
-          startDate,
-          endDate,
-          category: globalCategory,
+          category,
+          supplier,
+          stockStatus,
         },
         signal
       );
@@ -43,7 +46,7 @@ function Inventory() {
         setLoading(false);
       }
     }
-  }, [startDate, endDate, globalCategory]);
+  }, [category, supplier, stockStatus]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -53,20 +56,12 @@ function Inventory() {
     return () => controller.abort();
   }, [fetchInventory]);
 
-  const categories = useMemo(() => {
-    return [
-      ...new Set(
-        inventory
-          .map((item) => item.CATEGORY)
-          .filter(Boolean)
-      ),
-    ];
-  }, [inventory]);
-
   const filteredInventory = useMemo(() => {
-    return inventory.filter((item) => {
-      const searchValue = search.toLowerCase();
+    const searchValue = search.trim().toLowerCase();
 
+    if (!searchValue) return inventory;
+
+    return inventory.filter((item) => {
       return [
         item.ITEM_ID,
         item.ITEM_NAME,
@@ -294,13 +289,9 @@ function Inventory() {
                         </span>
                       </td>
 
-                      <td>
-                        {Number(item.QUANTITY || 0)}
-                      </td>
+                      <td>{Number(item.QUANTITY || 0)}</td>
 
-                      <td>
-                        {formatPrice(item.UNIT_PRICE)}
-                      </td>
+                      <td>{formatPrice(item.UNIT_PRICE)}</td>
 
                       <td>{item.SUPPLIER || "-"}</td>
 

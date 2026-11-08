@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { getSales } from "../services/salesService";
 import { useFilters } from "../context/FilterContext";
@@ -10,7 +9,7 @@ export function useSales() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const { startDate, endDate, category, region } = filters;
+  const { category, supplier, paymentStatus } = filters;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -21,14 +20,18 @@ export function useSales() {
         setError("");
 
         const data = await getSales(
-          { startDate, endDate, category, region },
+          {
+            category,
+            supplier,
+            paymentStatus,
+          },
           controller.signal
         );
 
-        setSales(data);
+        setSales(Array.isArray(data) ? data : []);
       } catch (err) {
         if (err.name !== "AbortError") {
-          setError(err.message);
+          setError(err.message || "Failed to fetch sales data");
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -40,7 +43,7 @@ export function useSales() {
     fetchSales();
 
     return () => controller.abort();
-  }, [startDate, endDate, category, region]);
+  }, [category, supplier, paymentStatus]);
 
   return { sales, loading, error };
 }

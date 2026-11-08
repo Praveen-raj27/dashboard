@@ -1,15 +1,16 @@
-
 import { createContext, useContext, useState } from "react";
 
 const FilterContext = createContext(null);
 
+const initialFilters = {
+  category: "",
+  supplier: "",
+  paymentStatus: "",
+  stockStatus: "",
+};
+
 export function FilterProvider({ children }) {
-  const [filters, setFilters] = useState({
-    startDate: "",
-    endDate: "",
-    category: "",
-    region: "",
-  });
+  const [filters, setFilters] = useState(initialFilters);
 
   const updateFilters = (newFilters) => {
     setFilters((prev) => ({
@@ -19,12 +20,7 @@ export function FilterProvider({ children }) {
   };
 
   const resetFilters = () => {
-    setFilters({
-      startDate: "",
-      endDate: "",
-      category: "",
-      region: "",
-    });
+    setFilters({ ...initialFilters });
   };
 
   return (
@@ -40,9 +36,7 @@ export function useFilters() {
   const context = useContext(FilterContext);
 
   if (!context) {
-    throw new Error(
-      "useFilters must be used inside FilterProvider"
-    );
+    throw new Error("useFilters must be used inside FilterProvider");
   }
 
   return context;

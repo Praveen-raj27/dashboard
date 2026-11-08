@@ -1,11 +1,10 @@
 import { executeQuery } from "../config/snowflake.js";
 
 export const fetchSales = async ({
-  startDate,
-  endDate,
   category,
-  region,
-}) => {
+  supplier,
+  paymentStatus,
+} = {}) => {
   let query = `
     SELECT
       O.ORDER_ID,
@@ -48,28 +47,19 @@ export const fetchSales = async ({
   const conditions = [];
   const binds = [];
 
-  if (startDate) {
-    conditions.push("O.CREATED_AT >= TO_TIMESTAMP_NTZ(?)");
-    binds.push(`${startDate} 00:00:00`);
-  }
-
-  if (endDate) {
-    conditions.push(
-      "O.CREATED_AT < DATEADD(DAY, 1, TO_DATE(?))"
-    );
-    binds.push(endDate);
-  }
-
   if (category) {
     conditions.push("I.CATEGORY = ?");
     binds.push(category);
   }
 
-  if (region) {
-    conditions.push(
-      "(O.CITY ILIKE ? OR O.STATE ILIKE ?)"
-    );
-    binds.push(`%${region}%`, `%${region}%`);
+  if (supplier) {
+    conditions.push("I.SUPPLIER = ?");
+    binds.push(supplier);
+  }
+
+  if (paymentStatus) {
+    conditions.push("O.PAYMENT_STATUS = ?");
+    binds.push(paymentStatus);
   }
 
   if (conditions.length > 0) {
