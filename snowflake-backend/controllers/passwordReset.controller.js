@@ -1,26 +1,27 @@
 import { randomBytes, createHash } from "crypto";
 import bcrypt from "bcrypt";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 import { executeQuery } from "../config/snowflake.js";
 
 const FRONTEND_URL = process.env.FRONTEND_URL;
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: process.env.SMTP_SECURE === "true",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  connectionTimeout: 15000,
-  greetingTimeout: 15000,
-  socketTimeout: 20000,
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-const hashToken = (token) =>
-  createHash("sha256").update(token).digest("hex");
+const hashToken = (token) => createHash("sha256").update(token).digest("hex");
+
+const escapeHtml = (value = "") =>
+  String(value).replace(
+    /[&<>"']/g,
+    (char) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[char],
+  );
 
 // POST /api/auth/forgot-password
 export const forgotPassword = async (req, res) => {
@@ -28,13 +29,19 @@ export const forgotPassword = async (req, res) => {
     "If an account exists with this email, you will receive a password reset link shortly.";
 
   try {
-    const email = String(req.body.email || "").trim().toLowerCase();
+    const email = String(req.body.email || "")
+      .trim()
+      .toLowerCase();
 
     if (!email) {
       return res.status(400).json({
         success: false,
         message: "Please enter your email address.",
       });
+    }
+
+    if (!process.env.RESEND_API_KEY || !FRONTEND_URL) {
+      throw new Error("Resend API key or frontend URL is missing.");
     }
 
     const users = await executeQuery(
@@ -44,7 +51,7 @@ export const forgotPassword = async (req, res) => {
         WHERE LOWER(EMAIL) = LOWER(?)
         LIMIT 1
       `,
-      [email]
+      [email],
     );
 
     // Do not reveal whether the email is registered.
@@ -57,7 +64,7 @@ export const forgotPassword = async (req, res) => {
 
     const user = users[0];
 
-    // Invalidate older unused reset tokens for this email.
+    // Invalidate older unused reset tokens.
     await executeQuery(
       `
         UPDATE PASSWORD_RESET_TOKENS
@@ -65,10 +72,10 @@ export const forgotPassword = async (req, res) => {
         WHERE LOWER(EMAIL) = LOWER(?)
           AND USED_AT IS NULL
       `,
-      [email]
+      [email],
     );
 
-    // Generate a secure, unpredictable token.
+    // Generate secure reset token.
     const token = randomBytes(32).toString("hex");
     const tokenHash = hashToken(token);
 
@@ -87,51 +94,85 @@ export const forgotPassword = async (req, res) => {
           CURRENT_TIMESTAMP()
         )
       `,
-      [email, tokenHash]
+      [email, tokenHash],
     );
 
-    const resetLink =
-      `${FRONTEND_URL}/reset-password?token=${encodeURIComponent(token)}`;
+    const resetLink = `${FRONTEND_URL}/reset-password?token=${encodeURIComponent(token)}`;
 
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: user.EMAIL,
+    const safeName = escapeHtml(user.NAME || "there");
+
+    // Send password reset email using Resend.
+    const { data, error } = await resend.emails.send({
+      from: "Snowpify <onboarding@resend.dev>",
+      to: [user.EMAIL],
       subject: "Reset your Snowpify password",
-      text: `Hello ${user.NAME || "there"}, use this link to reset your Snowpify password. This link expires in 15 minutes: ${resetLink}`,
+
+      text: `
+Hello ${user.NAME || "there"},
+
+We received a request to reset your Snowpify account password.
+
+Use the following link to reset your password:
+${resetLink}
+
+This link expires in 15 minutes and can only be used once.
+
+If you didn't request this, you can safely ignore this email.
+
+Snowpify
+      `,
+
       html: `
         <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:32px;color:#25352f;">
           <h2 style="margin-bottom:12px;">Reset your password</h2>
-          <p>Hello ${String(user.NAME || "there").replace(/[&<>"']/g, (char) => ({
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            '"': "&quot;",
-            "'": "&#39;",
-          })[char])},</p>
-          <p>We received a request to reset your Snowpify account password.</p>
+
+          <p>Hello ${safeName},</p>
+
+          <p>
+            We received a request to reset your Snowpify account password.
+          </p>
+
           <p style="margin:28px 0;">
             <a href="${resetLink}"
                style="background:#25352f;color:#fff;padding:13px 22px;text-decoration:none;border-radius:7px;display:inline-block;">
               Reset Password
             </a>
           </p>
-          <p>This link expires in <strong>15 minutes</strong> and can only be used once.</p>
-          <p>If you didn't request this, you can safely ignore this email.</p>
-          <p style="margin-top:32px;color:#777;font-size:13px;">Snowpify</p>
+
+          <p>
+            This link expires in <strong>15 minutes</strong>
+            and can only be used once.
+          </p>
+
+          <p>
+            If you didn't request this, you can safely ignore this email.
+          </p>
+
+          <p style="margin-top:32px;color:#777;font-size:13px;">
+            Snowpify
+          </p>
         </div>
       `,
     });
+
+    if (error) {
+      console.error("Resend email error:", error);
+      throw new Error("Failed to send password reset email.");
+    }
+
+    console.log("Password reset email sent:", data?.id);
 
     return res.status(200).json({
       success: true,
       message: genericMessage,
     });
   } catch (error) {
-    console.error("Forgot password error:", error.message);
+    console.error("Forgot password error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Unable to process your request right now. Please try again later.",
+      message:
+        "Unable to process your request right now. Please try again later.",
     });
   }
 };
@@ -167,13 +208,14 @@ export const resetPassword = async (req, res) => {
           AND EXPIRES_AT > CURRENT_TIMESTAMP()
         LIMIT 1
       `,
-      [tokenHash]
+      [tokenHash],
     );
 
     if (!records.length) {
       return res.status(400).json({
         success: false,
-        message: "This reset link is invalid or has expired. Please request a new one.",
+        message:
+          "This reset link is invalid or has expired. Please request a new one.",
       });
     }
 
@@ -186,10 +228,10 @@ export const resetPassword = async (req, res) => {
         SET PASSWORD = ?
         WHERE LOWER(EMAIL) = LOWER(?)
       `,
-      [hashedPassword, email]
+      [hashedPassword, email],
     );
 
-    // Mark the reset token as used.
+    // Mark reset token as used.
     await executeQuery(
       `
         UPDATE PASSWORD_RESET_TOKENS
@@ -197,7 +239,7 @@ export const resetPassword = async (req, res) => {
         WHERE TOKEN_HASH = ?
           AND USED_AT IS NULL
       `,
-      [tokenHash]
+      [tokenHash],
     );
 
     return res.status(200).json({
@@ -205,7 +247,7 @@ export const resetPassword = async (req, res) => {
       message: "Your password has been reset successfully. Please sign in.",
     });
   } catch (error) {
-    console.error("Reset password error:", error.message);
+    console.error("Reset password error:", error);
 
     return res.status(500).json({
       success: false,

@@ -20,6 +20,7 @@
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^10.4.0",
     "razorpay": "^2.9.8",
+    "resend": "^6.37.0",
     "snowflake-sdk": "^3.4.1"
   },
   "devDependencies": {
