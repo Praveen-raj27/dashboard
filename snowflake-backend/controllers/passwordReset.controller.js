@@ -103,7 +103,7 @@ export const forgotPassword = async (req, res) => {
 
     // Send password reset email using Resend.
     const { data, error } = await resend.emails.send({
-     from: "Snowpify <no-reply@snowpify.com>",
+     from: "onboarding@resend.dev",
       to: [user.EMAIL],
       subject: "Reset your Snowpify password",
 
