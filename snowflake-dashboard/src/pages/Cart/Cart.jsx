@@ -123,7 +123,7 @@ function Cart() {
               Looks like you haven't added anything to your shopping cart yet.
             </p>
 
-            <button type="button" onClick={() => navigate("/")}>
+            <button type="button" onClick={() => navigate("/home")}>
               Explore Products →
             </button>
           </div>
