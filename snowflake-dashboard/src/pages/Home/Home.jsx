@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getInventory } from "../../services/salesService";
 import "./Home.css";
+import "./ProductModal.css";
 
 function Home() {
   const [inventory, setInventory] = useState([]);
@@ -10,6 +11,10 @@ function Home() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [sortBy, setSortBy] = useState("default");
+
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [modalQuantity, setModalQuantity] = useState(1);
+
   const [cart, setCart] = useState(() => {
     try {
       const savedCart = JSON.parse(
@@ -39,6 +44,7 @@ function Home() {
     try {
       setLoading(true);
       setError("");
+
       const data = await getInventory();
       setInventory(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -48,6 +54,11 @@ function Home() {
     }
   };
 
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  // Persist cart to localStorage
   useEffect(() => {
     if (loading || inventory.length === 0) return;
 
@@ -67,10 +78,6 @@ function Home() {
 
     localStorage.setItem("snowpify_cart", JSON.stringify(savedCart));
   }, [cart, inventory, loading]);
-
-  useEffect(() => {
-    fetchItems();
-  }, []);
 
   const categories = useMemo(() => {
     return [
@@ -113,6 +120,17 @@ function Home() {
 
     return products;
   }, [inventory, search, category, sortBy]);
+
+  // Open product details modal
+  const openProductModal = (item) => {
+    setSelectedProduct(item);
+    setModalQuantity(1);
+  };
+
+  const closeProductModal = () => {
+    setSelectedProduct(null);
+    setModalQuantity(1);
+  };
 
   // Add or remove product quantity
   const updateCart = (item, change) => {
@@ -299,7 +317,6 @@ function Home() {
             <div className="store-cart-summary">
               <div className="store-cart-info">
                 <span className="store-cart-icon">🛒</span>
-
                 <div>
                   <strong>
                     {totalCartItems} {totalCartItems === 1 ? "Item" : "Items"}
@@ -357,7 +374,20 @@ function Home() {
                 const selectedQuantity = cart[id] || 0;
 
                 return (
-                  <article className="product-card" key={id}>
+                  <article
+                    className="product-card product-card-clickable"
+                    key={id}
+                    onClick={() => openProductModal(item)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openProductModal(item);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`View details for ${name}`}
+                  >
                     <div className="product-image">
                       <span className="product-category-tag">
                         {itemCategory || "General"}
@@ -388,13 +418,15 @@ function Home() {
                         <span>{quantity} available</span>
                       </div>
 
-                      {/* Cart Quantity Controls */}
                       {selectedQuantity > 0 ? (
                         <div className="product-cart-actions">
                           <div className="quantity-control">
                             <button
                               type="button"
-                              onClick={() => updateCart(item, -1)}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                updateCart(item, -1);
+                              }}
                               aria-label={`Remove one ${name}`}
                             >
                               −
@@ -404,7 +436,10 @@ function Home() {
 
                             <button
                               type="button"
-                              onClick={() => updateCart(item, 1)}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                updateCart(item, 1);
+                              }}
                               disabled={selectedQuantity >= quantity}
                               aria-label={`Add one ${name}`}
                             >
@@ -415,7 +450,10 @@ function Home() {
                           <button
                             type="button"
                             className="add-cart-button"
-                            onClick={() => navigate("/cart")}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              navigate("/cart");
+                            }}
                           >
                             View Cart →
                           </button>
@@ -424,7 +462,10 @@ function Home() {
                         <button
                           type="button"
                           className="add-cart-button"
-                          onClick={() => updateCart(item, 1)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            updateCart(item, 1);
+                          }}
                           disabled={quantity <= 0}
                         >
                           {quantity <= 0 ? "Out of Stock" : "Add to Cart +"}
@@ -444,12 +485,157 @@ function Home() {
           )}
         </section>
 
+        {/* Product Details Modal */}
+        {selectedProduct && (
+          <div
+            className="product-modal-backdrop"
+            onClick={closeProductModal}
+            role="presentation"
+          >
+            <section
+              className="product-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="product-modal-title"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                className="product-modal-close"
+                onClick={closeProductModal}
+                aria-label="Close product details"
+              >
+                ×
+              </button>
+
+              {/* 3D Product Preview */}
+
+              <div className="product-modal-visual">
+                <span className="product-preview-label">
+                  SNOWPIFY EXCLUSIVE
+                </span>
+
+                <div className="product-stage">
+                  <div className="product-stage-glow" />
+
+                  <div className="product-stage-platform">
+                    <div className="product-stage-object">
+                      {getProductIcon(getValue(selectedProduct, "CATEGORY"))}
+                    </div>
+                  </div>
+
+                  <div className="product-stage-shadow" />
+                </div>
+
+                <span className="product-preview-caption">PRODUCT DETAILS</span>
+              </div>
+
+              {/* Product Information */}
+              <div className="product-modal-content">
+                <span className="product-modal-eyebrow">
+                  {getValue(selectedProduct, "CATEGORY") || "GENERAL"}
+                </span>
+
+                <h2 id="product-modal-title">
+                  {getValue(selectedProduct, "ITEM_NAME") || "Unnamed Product"}
+                </h2>
+
+                <p className="product-modal-supplier">
+                  {getValue(selectedProduct, "SUPPLIER") ||
+                    "Snowpify Collection"}
+                </p>
+
+                <strong className="product-modal-price">
+                  {formatPrice(getValue(selectedProduct, "UNIT_PRICE"))}
+                </strong>
+
+                <p className="product-modal-description">
+                  A quality pick from the Snowpify collection. Add it to your
+                  cart and continue exploring our store.
+                </p>
+
+                <div className="product-modal-stock">
+                  <span
+                    className={`modal-stock-dot ${
+                      Number(getValue(selectedProduct, "QUANTITY")) > 0
+                        ? "in-stock"
+                        : "out-stock"
+                    }`}
+                  />
+
+                  {Number(getValue(selectedProduct, "QUANTITY")) > 0
+                    ? `${getValue(selectedProduct, "QUANTITY")} units available`
+                    : "Currently out of stock"}
+                </div>
+
+                {Number(getValue(selectedProduct, "QUANTITY")) > 0 && (
+                  <>
+                    <div className="product-modal-quantity-row">
+                      <span>Quantity</span>
+
+                      <div className="quantity-control">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setModalQuantity((value) => Math.max(1, value - 1))
+                          }
+                          disabled={modalQuantity <= 1}
+                          aria-label="Decrease quantity"
+                        >
+                          −
+                        </button>
+
+                        <span>{modalQuantity}</span>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setModalQuantity((value) =>
+                              Math.min(
+                                Number(getValue(selectedProduct, "QUANTITY")),
+                                value + 1,
+                              ),
+                            )
+                          }
+                          disabled={
+                            modalQuantity >=
+                            Number(getValue(selectedProduct, "QUANTITY"))
+                          }
+                          aria-label="Increase quantity"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="add-cart-button product-modal-add-button"
+                      onClick={() => {
+                        updateCart(selectedProduct, modalQuantity);
+                        closeProductModal();
+                      }}
+                    >
+                      Add {modalQuantity} to Cart ·{" "}
+                      {formatPrice(
+                        Number(getValue(selectedProduct, "UNIT_PRICE")) *
+                          modalQuantity,
+                      )}
+                    </button>
+                  </>
+                )}
+              </div>
+            </section>
+          </div>
+        )}
+
         {/* Footer */}
         <footer className="store-footer">
           <div>
             <h3>Snowpify.</h3>
             <p>Manage smarter. Shop better. Grow together.</p>
           </div>
+
           <span>
             © {new Date().getFullYear()} Snowpify. All rights reserved.
           </span>

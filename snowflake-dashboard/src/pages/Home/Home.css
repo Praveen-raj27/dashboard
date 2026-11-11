@@ -339,6 +339,7 @@
   border-radius: 13px;
   overflow: hidden;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
+  cursor: pointer;
 }
 
 .product-card:hover {
