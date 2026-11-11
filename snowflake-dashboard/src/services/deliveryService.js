@@ -60,3 +60,69 @@ export const getCustomerOrders = async (signal) => {
 
   return result.data;
 };
+
+
+export const getAllDeliveryOrders = async (signal) => {
+  const response = await fetch(
+    `${API_URL}/api/delivery/admin/orders`,
+    {
+      method: "GET",
+      headers: getAuthHeaders(),
+      signal,
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message || "Failed to fetch delivery orders."
+    );
+  }
+
+  return result.data;
+};
+
+
+
+export const assignDeliveryDetails = async (payload) => {
+  const response = await fetch(
+    `${API_URL}/api/delivery/admin/orders/assign`,
+    {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message || "Failed to assign delivery."
+    );
+  }
+
+  return result.data;
+};
+
+export const updateDeliveryStatus = async (payload) => {
+  const response = await fetch(
+    `${API_URL}/api/delivery/admin/orders/status`,
+    {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message || "Failed to update delivery status."
+    );
+  }
+
+  return result.data;
+};

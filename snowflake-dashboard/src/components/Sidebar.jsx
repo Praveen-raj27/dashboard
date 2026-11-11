@@ -58,6 +58,10 @@ function Sidebar() {
           <span>▦</span>
           Inventory
         </NavLink>
+        <NavLink to="/delivery-management" className="nav-item">
+  <span>▣</span>
+  Delivery Management
+</NavLink>
       </nav>
 
       <div className="sidebar-bottom">

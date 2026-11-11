@@ -18,6 +18,7 @@ import ForgotPassword from "./pages/Login/ForgotPassword";
 import ResetPassword from "./pages/Login/ResetPassword";
 import MyOrders from "./pages/customer/MyOrders";
 import TrackOrder from "./pages/customer/TrackOrder";
+import DeliveryManagement from "./pages/Admin/DeliveryManagement";
 
 import "./index.css";
 
@@ -49,6 +50,10 @@ function App() {
               <Route path="/sales" element={<Sales />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/inventory" element={<Inventory />} />
+              <Route
+                path="/delivery-management"
+                element={<DeliveryManagement />}
+              />
             </Route>
           </Route>
         </Route>
