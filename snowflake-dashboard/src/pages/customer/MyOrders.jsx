@@ -55,6 +55,9 @@ const MyOrders = () => {
     }).format(Number(amount || 0));
   };
 
+  const formatStatus = (status) =>
+    status?.replaceAll("_", " ") || "Pending";
+
   if (loading) {
     return <div className="orders-message">Loading your orders...</div>;
   }
@@ -80,14 +83,16 @@ const MyOrders = () => {
         <div className="orders-empty">
           <h2>No orders yet</h2>
           <p>Your purchases will appear here.</p>
+
+          <button type="button" onClick={() => navigate("/home")}>
+            Explore Products
+          </button>
         </div>
       ) : (
         <div className="orders-list">
           {orders.map((order) => (
-            <article
-              className="order-card"
-              key={order.ORDER_ID}
-            >
+            <article className="order-card" key={order.ORDER_ID}>
+              {/* Order Header */}
               <div className="order-card-header">
                 <div>
                   <span className="order-label">Order ID</span>
@@ -96,13 +101,14 @@ const MyOrders = () => {
 
                 <span
                   className={`order-status ${String(
-                    order.DELIVERY_STATUS
+                    order.DELIVERY_STATUS || "pending"
                   ).toLowerCase()}`}
                 >
-                  {order.DELIVERY_STATUS?.replaceAll("_", " ")}
+                  {formatStatus(order.DELIVERY_STATUS)}
                 </span>
               </div>
 
+              {/* Order Information */}
               <div className="order-card-details">
                 <div>
                   <span>Order date</span>
@@ -111,20 +117,74 @@ const MyOrders = () => {
 
                 <div>
                   <span>Payment</span>
-                  <strong>{order.PAYMENT_STATUS}</strong>
+                  <strong>{formatStatus(order.PAYMENT_STATUS)}</strong>
                 </div>
 
                 <div>
-                  <span>Total amount</span>
-                  <strong>
-                    {formatCurrency(
-                      order.TOTAL_AMOUNT,
-                      order.CURRENCY
-                    )}
-                  </strong>
+                  <span>Products</span>
+                  <strong>{order.ITEMS?.length || 0}</strong>
                 </div>
               </div>
 
+              {/* Purchased Products */}
+              <div className="order-products-section">
+                <h4>Items Ordered</h4>
+
+                {order.ITEMS?.length > 0 ? (
+                  <div className="order-products-list">
+                    {order.ITEMS.map((item) => (
+                      <div
+                        className="order-product"
+                        key={item.ORDER_ITEM_ID || `${item.ORDER_ID}-${item.ITEM_ID}`}
+                      >
+                        <div className="order-product-image">
+                          <span>📦</span>
+                        </div>
+
+                        <div className="order-product-info">
+                          <strong>{item.ITEM_NAME}</strong>
+                          <span>Item #{item.ITEM_ID}</span>
+                          <span>Quantity: {item.QUANTITY}</span>
+                        </div>
+
+                        <div className="order-product-price">
+                          <strong>
+                            {formatCurrency(
+                              item.LINE_TOTAL,
+                              order.CURRENCY
+                            )}
+                          </strong>
+
+                          <span>
+                            {formatCurrency(
+                              item.UNIT_PRICE,
+                              order.CURRENCY
+                            )} / item
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="order-no-items">
+                    Product details unavailable.
+                  </p>
+                )}
+              </div>
+
+              {/* Order Total */}
+              <div className="order-total-section">
+                <span>Total Amount Paid</span>
+
+                <strong>
+                  {formatCurrency(
+                    order.TOTAL_AMOUNT,
+                    order.CURRENCY
+                  )}
+                </strong>
+              </div>
+
+              {/* Footer */}
               <div className="order-card-footer">
                 <div>
                   <span>Delivery partner</span>
@@ -140,12 +200,10 @@ const MyOrders = () => {
                     !order.DELIVERY_PARTNER
                   }
                   onClick={() =>
-                    navigate(
-                      `/track-order/${order.ORDER_ID}`
-                    )
+                    navigate(`/track-order/${order.ORDER_ID}`)
                   }
                 >
-                  Track Order
+                  Track Order →
                 </button>
               </div>
             </article>

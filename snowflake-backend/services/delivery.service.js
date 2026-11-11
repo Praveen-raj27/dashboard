@@ -21,33 +21,76 @@ const getCustomerEmail = async (userId) => {
 };
 
 // 1. GET ALL ORDERS FOR LOGGED-IN CUSTOMER
+
 export const getCustomerOrders = async (userId) => {
-  const email = await getCustomerEmail(userId);
+  const customer = await getCustomerEmail(userId);
 
   const orders = await executeQuery(
-    `SELECT
+    `
+      SELECT
         ORDER_ID,
         CUSTOMER_NAME,
+        CUSTOMER_EMAIL,
+        CREATED_AT,
         SUBTOTAL,
         TOTAL_AMOUNT,
         CURRENCY,
         ORDER_STATUS,
         PAYMENT_STATUS,
         DELIVERY_STATUS,
-        TRACKING_NUMBER,
         DELIVERY_PARTNER,
-        ESTIMATED_DELIVERY_DATE,
-        CREATED_AT,
-        SHIPPED_AT,
-        DELIVERED_AT
-     FROM ORDERS
-     WHERE LOWER(CUSTOMER_EMAIL) = LOWER(?)
-     ORDER BY CREATED_AT DESC`,
-    [email]
+        TRACKING_NUMBER,
+        TRACKING_URL,
+        ESTIMATED_DELIVERY_DATE
+      FROM ORDERS
+      WHERE LOWER(CUSTOMER_EMAIL) = LOWER(?)
+      ORDER BY CREATED_AT DESC
+    `,
+    [customer.EMAIL]
   );
 
-  return orders;
+  if (!orders.length) {
+    return [];
+  }
+
+  const orderIds = orders.map((order) => order.ORDER_ID);
+
+  const placeholders = orderIds.map(() => "?").join(",");
+
+  const orderItems = await executeQuery(
+    `
+      SELECT
+        ORDER_ID,
+        ITEM_ID,
+        ITEM_NAME,
+        QUANTITY,
+        UNIT_PRICE,
+        LINE_TOTAL
+      FROM ORDER_ITEMS
+      WHERE ORDER_ID IN (${placeholders})
+      ORDER BY CREATED_AT ASC
+    `,
+    orderIds
+  );
+
+  // Group products by their order ID.
+  const itemsByOrder = orderItems.reduce((result, item) => {
+    if (!result[item.ORDER_ID]) {
+      result[item.ORDER_ID] = [];
+    }
+
+    result[item.ORDER_ID].push(item);
+
+    return result;
+  }, {});
+
+  // Attach products to their respective orders.
+  return orders.map((order) => ({
+    ...order,
+    ITEMS: itemsByOrder[order.ORDER_ID] || [],
+  }));
 };
+
 
 // 2. GET INDIVIDUAL ORDER DETAILS
 export const getOrderDetails = async (userId, orderId) => {

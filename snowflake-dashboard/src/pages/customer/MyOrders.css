@@ -190,3 +190,129 @@
     width: 100%;
   }
 }
+
+/* Purchased products */
+
+.order-products-section {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ece8;
+}
+
+.order-products-section h4 {
+  margin: 0 0 16px;
+  font-size: 15px;
+  color: #25352f;
+}
+
+.order-products-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.order-product {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 14px;
+  background: #f8f9f7;
+  border: 1px solid #e9ece8;
+  border-radius: 10px;
+}
+
+.order-product-image {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef1ed;
+  border-radius: 8px;
+  font-size: 27px;
+}
+
+.order-product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.order-product-info strong {
+  font-size: 14px;
+  color: #25352f;
+}
+
+.order-product-info span,
+.order-product-price span {
+  font-size: 12px;
+  color: #7a837d;
+}
+
+.order-product-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  text-align: right;
+}
+
+.order-product-price strong {
+  font-size: 14px;
+  color: #25352f;
+}
+
+.order-no-items {
+  font-size: 13px;
+  color: #858d87;
+}
+
+.order-total-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 0;
+  margin-top: 8px;
+  border-top: 1px solid #e9ece8;
+}
+
+.order-total-section span {
+  font-size: 14px;
+  color: #68736c;
+}
+
+.order-total-section strong {
+  font-size: 19px;
+  color: #25352f;
+}
+
+@media (max-width: 600px) {
+  .order-product {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .order-product-image {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    font-size: 21px;
+  }
+
+  .order-product-info strong,
+  .order-product-price strong {
+    font-size: 12px;
+  }
+
+  .order-product-info span,
+  .order-product-price span {
+    font-size: 11px;
+  }
+
+  .order-total-section strong {
+    font-size: 17px;
+  }
+}
