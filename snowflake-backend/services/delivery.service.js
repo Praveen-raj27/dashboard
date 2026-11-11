@@ -23,8 +23,8 @@ const getCustomerEmail = async (userId) => {
 // 1. GET ALL ORDERS FOR LOGGED-IN CUSTOMER
 
 export const getCustomerOrders = async (userId) => {
-  const customer = await getCustomerEmail(userId);
-
+ const customerEmail = await getCustomerEmail(userId);
+    
   const orders = await executeQuery(
     `
       SELECT
@@ -46,7 +46,7 @@ export const getCustomerOrders = async (userId) => {
       WHERE LOWER(CUSTOMER_EMAIL) = LOWER(?)
       ORDER BY CREATED_AT DESC
     `,
-    [customer.EMAIL]
+    [customerEmail]
   );
 
   if (!orders.length) {
