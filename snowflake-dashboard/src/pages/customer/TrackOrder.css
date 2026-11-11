@@ -1,0 +1,138 @@
+
+.track-order-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  color: #25352f;
+}
+
+.tracking-back-button {
+  border: none;
+  background: transparent;
+  color: #25352f;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 28px;
+}
+
+.tracking-heading {
+  margin-bottom: 28px;
+}
+
+.tracking-heading h1 {
+  font-size: 28px;
+  margin: 0 0 8px;
+}
+
+.tracking-heading p {
+  color: #737b76;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.tracking-card {
+  background: #fff;
+  border: 1px solid #e9ece8;
+  border-radius: 14px;
+  padding: 28px;
+}
+
+.tracking-card h2 {
+  font-size: 19px;
+  margin: 0 0 28px;
+}
+
+.tracking-timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.tracking-step {
+  display: flex;
+  gap: 18px;
+  min-height: 105px;
+  position: relative;
+}
+
+.tracking-step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 34px;
+  height: calc(100% - 20px);
+  width: 2px;
+  background: #e5e9e5;
+}
+
+.tracking-step.completed:not(:last-child)::before {
+  background: #25352f;
+}
+
+.tracking-indicator {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  border: 2px solid #d9dfda;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  z-index: 1;
+}
+
+.tracking-step.completed .tracking-indicator {
+  background: #25352f;
+  border-color: #25352f;
+}
+
+.tracking-step-content {
+  padding-bottom: 24px;
+}
+
+.tracking-step-content h3 {
+  font-size: 15px;
+  margin: 5px 0 8px;
+  text-transform: capitalize;
+}
+
+.tracking-step-content p {
+  color: #68736c;
+  font-size: 13px;
+  margin: 4px 0;
+}
+
+.tracking-step-content span {
+  display: block;
+  color: #929a94;
+  font-size: 12px;
+  margin-top: 7px;
+}
+
+.tracking-message {
+  padding: 50px 20px;
+  text-align: center;
+  color: #25352f;
+}
+
+.tracking-error {
+  color: #c0392b;
+}
+
+@media (max-width: 600px) {
+  .track-order-page {
+    padding: 22px 16px;
+  }
+
+  .tracking-card {
+    padding: 20px 16px;
+  }
+
+  .tracking-heading h1 {
+    font-size: 23px;
+  }
+}

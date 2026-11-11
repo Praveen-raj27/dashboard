@@ -1,5 +1,4 @@
-
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Checkout.css";
 
@@ -10,9 +9,7 @@ function Checkout() {
 
   const [cartItems] = useState(() => {
     try {
-      return JSON.parse(
-        localStorage.getItem("snowpify_cart") || "[]"
-      );
+      return JSON.parse(localStorage.getItem("snowpify_cart") || "[]");
     } catch {
       return [];
     }
@@ -37,6 +34,16 @@ function Checkout() {
   const [orderComplete, setOrderComplete] = useState(false);
   const [completedOrderId, setCompletedOrderId] = useState("");
 
+  useEffect(() => {
+    if (!orderComplete) return;
+
+    const timer = setTimeout(() => {
+      navigate("/my-orders", { replace: true });
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [orderComplete, navigate]);
+
   const getValue = (item, key) =>
     item?.[key] ?? item?.[key.toLowerCase()] ?? "";
 
@@ -51,20 +58,19 @@ function Checkout() {
     () =>
       cartItems.reduce(
         (total, entry) => total + Number(entry.quantity || 0),
-        0
+        0,
       ),
-    [cartItems]
+    [cartItems],
   );
 
   const subtotal = useMemo(
     () =>
       cartItems.reduce((total, entry) => {
-        const price =
-          Number(getValue(entry.item, "UNIT_PRICE")) || 0;
+        const price = Number(getValue(entry.item, "UNIT_PRICE")) || 0;
 
         return total + price * Number(entry.quantity || 0);
       }, 0),
-    [cartItems]
+    [cartItems],
   );
 
   const deliveryCharge = 0;
@@ -113,15 +119,12 @@ function Checkout() {
       newErrors.fullName = "Please enter your full name.";
     }
 
-    if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
-    ) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Please enter a valid email address.";
     }
 
     if (!/^[6-9]\d{9}$/.test(formData.phone)) {
-      newErrors.phone =
-        "Enter a valid 10-digit Indian mobile number.";
+      newErrors.phone = "Enter a valid 10-digit Indian mobile number.";
     }
 
     if (!formData.address.trim()) {
@@ -190,17 +193,14 @@ function Checkout() {
       const scriptLoaded = await loadRazorpayScript();
 
       if (!scriptLoaded) {
-        throw new Error(
-          "Unable to load payment gateway. Please try again."
-        );
+        throw new Error("Unable to load payment gateway. Please try again.");
       }
 
       // Send only product IDs and quantities.
       // Backend must retrieve prices and stock from Snowflake.
       const items = cartItems.map((entry) => ({
         itemId: String(
-          getValue(entry.item, "ITEM_ID") ||
-          getValue(entry.item, "ID")
+          getValue(entry.item, "ITEM_ID") || getValue(entry.item, "ID"),
         ),
         quantity: Number(entry.quantity),
       }));
@@ -210,42 +210,37 @@ function Checkout() {
           (item) =>
             !item.itemId ||
             !Number.isInteger(item.quantity) ||
-            item.quantity <= 0
+            item.quantity <= 0,
         )
       ) {
         throw new Error("Your cart contains an invalid item.");
       }
 
       // Create pending order in backend.
-      const orderResponse = await fetch(
-        `${API_URL}/api/orders/create`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+      const orderResponse = await fetch(`${API_URL}/api/orders/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          customer: {
+            name: formData.fullName.trim(),
+            email: formData.email.trim(),
+            phone: formData.phone.trim(),
+            address: formData.address.trim(),
+            city: formData.city.trim(),
+            state: formData.state.trim(),
+            pincode: formData.pincode.trim(),
+            notes: formData.notes.trim(),
           },
-          body: JSON.stringify({
-            customer: {
-              name: formData.fullName.trim(),
-              email: formData.email.trim(),
-              phone: formData.phone.trim(),
-              address: formData.address.trim(),
-              city: formData.city.trim(),
-              state: formData.state.trim(),
-              pincode: formData.pincode.trim(),
-              notes: formData.notes.trim(),
-            },
-            items,
-          }),
-        }
-      );
+          items,
+        }),
+      });
 
       const orderData = await orderResponse.json();
 
       if (!orderResponse.ok || !orderData.success) {
-        throw new Error(
-          orderData.message || "Unable to create your order."
-        );
+        throw new Error(orderData.message || "Unable to create your order.");
       }
 
       // Configure Razorpay Checkout.
@@ -283,25 +278,18 @@ function Checkout() {
                 },
                 body: JSON.stringify({
                   orderId: orderData.orderId,
-                  razorpay_order_id:
-                    response.razorpay_order_id,
-                  razorpay_payment_id:
-                    response.razorpay_payment_id,
-                  razorpay_signature:
-                    response.razorpay_signature,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
                 }),
-              }
+              },
             );
 
             const verifyData = await verifyResponse.json();
 
-            if (
-              !verifyResponse.ok ||
-              !verifyData.success
-            ) {
+            if (!verifyResponse.ok || !verifyData.success) {
               throw new Error(
-                verifyData.message ||
-                "Payment verification failed."
+                verifyData.message || "Payment verification failed.",
               );
             }
 
@@ -320,7 +308,7 @@ function Checkout() {
           } catch (error) {
             setPaymentError(
               error.message ||
-              "Payment verification failed. Please contact support."
+                "Payment verification failed. Please contact support.",
             );
           } finally {
             setPaymentLoading(false);
@@ -338,8 +326,7 @@ function Checkout() {
 
       razorpay.on("payment.failed", (response) => {
         setPaymentError(
-          response.error?.description ||
-          "Payment failed. Please try again."
+          response.error?.description || "Payment failed. Please try again.",
         );
 
         setPaymentLoading(false);
@@ -350,7 +337,7 @@ function Checkout() {
       console.error("Checkout payment error:", error);
 
       setPaymentError(
-        error.message || "Something went wrong. Please try again."
+        error.message || "Something went wrong. Please try again.",
       );
 
       setPaymentLoading(false);
@@ -366,10 +353,7 @@ function Checkout() {
           <h2>Your cart is empty</h2>
           <p>Add products before proceeding to checkout.</p>
 
-          <button
-            type="button"
-            onClick={() => navigate("/home")}
-          >
+          <button type="button" onClick={() => navigate("/home")}>
             Explore Products →
           </button>
         </div>
@@ -388,8 +372,8 @@ function Checkout() {
             <h1>Order Confirmed!</h1>
 
             <p>
-              Your payment has been verified successfully.
-              Thank you for shopping with Snowpify.
+              Your payment has been verified successfully. Thank you for
+              shopping with Snowpify.
             </p>
 
             <div className="checkout-review-address">
@@ -407,9 +391,9 @@ function Checkout() {
             <button
               type="button"
               className="checkout-submit-button"
-              onClick={() => navigate("/home")}
+              onClick={() => navigate("/my-orders", { replace: true })}
             >
-              Continue Shopping →
+              View My Orders →
             </button>
           </div>
         </div>
@@ -420,19 +404,14 @@ function Checkout() {
   return (
     <main className="checkout-page">
       <div className="checkout-container">
-
         {/* Header */}
         <div className="checkout-heading">
           <div>
-            <span className="checkout-eyebrow">
-              ALMOST THERE
-            </span>
+            <span className="checkout-eyebrow">ALMOST THERE</span>
 
             <h1>Checkout</h1>
 
-            <p>
-              Complete your delivery details to review your order.
-            </p>
+            <p>Complete your delivery details to review your order.</p>
           </div>
 
           <button
@@ -456,11 +435,7 @@ function Checkout() {
             <p>Checkout</p>
           </div>
 
-          <div
-            className={`checkout-step ${
-              orderComplete ? "completed" : ""
-            }`}
-          >
+          <div className={`checkout-step ${orderComplete ? "completed" : ""}`}>
             <span>3</span>
             <p>Confirmation</p>
           </div>
@@ -468,16 +443,12 @@ function Checkout() {
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="checkout-layout">
-
             {/* Customer Details */}
             <div className="checkout-form-section">
-
               {/* Contact Information */}
               <section className="checkout-card">
                 <div className="checkout-card-heading">
-                  <span className="checkout-section-number">
-                    01
-                  </span>
+                  <span className="checkout-section-number">01</span>
 
                   <div>
                     <h2>Contact Information</h2>
@@ -487,9 +458,7 @@ function Checkout() {
 
                 <div className="checkout-form-grid">
                   <div className="checkout-field full-width">
-                    <label htmlFor="fullName">
-                      Full Name *
-                    </label>
+                    <label htmlFor="fullName">Full Name *</label>
 
                     <input
                       id="fullName"
@@ -501,16 +470,12 @@ function Checkout() {
                     />
 
                     {errors.fullName && (
-                      <span className="checkout-error">
-                        {errors.fullName}
-                      </span>
+                      <span className="checkout-error">{errors.fullName}</span>
                     )}
                   </div>
 
                   <div className="checkout-field">
-                    <label htmlFor="email">
-                      Email Address *
-                    </label>
+                    <label htmlFor="email">Email Address *</label>
 
                     <input
                       id="email"
@@ -523,16 +488,12 @@ function Checkout() {
                     />
 
                     {errors.email && (
-                      <span className="checkout-error">
-                        {errors.email}
-                      </span>
+                      <span className="checkout-error">{errors.email}</span>
                     )}
                   </div>
 
                   <div className="checkout-field">
-                    <label htmlFor="phone">
-                      Mobile Number *
-                    </label>
+                    <label htmlFor="phone">Mobile Number *</label>
 
                     <input
                       id="phone"
@@ -547,9 +508,7 @@ function Checkout() {
                     />
 
                     {errors.phone && (
-                      <span className="checkout-error">
-                        {errors.phone}
-                      </span>
+                      <span className="checkout-error">{errors.phone}</span>
                     )}
                   </div>
                 </div>
@@ -558,9 +517,7 @@ function Checkout() {
               {/* Delivery Address */}
               <section className="checkout-card">
                 <div className="checkout-card-heading">
-                  <span className="checkout-section-number">
-                    02
-                  </span>
+                  <span className="checkout-section-number">02</span>
 
                   <div>
                     <h2>Delivery Address</h2>
@@ -570,9 +527,7 @@ function Checkout() {
 
                 <div className="checkout-form-grid">
                   <div className="checkout-field full-width">
-                    <label htmlFor="address">
-                      Street Address *
-                    </label>
+                    <label htmlFor="address">Street Address *</label>
 
                     <textarea
                       id="address"
@@ -585,9 +540,7 @@ function Checkout() {
                     />
 
                     {errors.address && (
-                      <span className="checkout-error">
-                        {errors.address}
-                      </span>
+                      <span className="checkout-error">{errors.address}</span>
                     )}
                   </div>
 
@@ -604,9 +557,7 @@ function Checkout() {
                     />
 
                     {errors.city && (
-                      <span className="checkout-error">
-                        {errors.city}
-                      </span>
+                      <span className="checkout-error">{errors.city}</span>
                     )}
                   </div>
 
@@ -623,16 +574,12 @@ function Checkout() {
                     />
 
                     {errors.state && (
-                      <span className="checkout-error">
-                        {errors.state}
-                      </span>
+                      <span className="checkout-error">{errors.state}</span>
                     )}
                   </div>
 
                   <div className="checkout-field">
-                    <label htmlFor="pincode">
-                      PIN Code *
-                    </label>
+                    <label htmlFor="pincode">PIN Code *</label>
 
                     <input
                       id="pincode"
@@ -646,9 +593,7 @@ function Checkout() {
                     />
 
                     {errors.pincode && (
-                      <span className="checkout-error">
-                        {errors.pincode}
-                      </span>
+                      <span className="checkout-error">{errors.pincode}</span>
                     )}
                   </div>
 
@@ -672,9 +617,7 @@ function Checkout() {
               {/* Payment Method */}
               <section className="checkout-card">
                 <div className="checkout-card-heading">
-                  <span className="checkout-section-number">
-                    03
-                  </span>
+                  <span className="checkout-section-number">03</span>
 
                   <div>
                     <h2>Payment Method</h2>
@@ -687,26 +630,18 @@ function Checkout() {
                     type="radio"
                     name="paymentMethod"
                     value="razorpay"
-                    checked={
-                      formData.paymentMethod === "razorpay"
-                    }
+                    checked={formData.paymentMethod === "razorpay"}
                     onChange={handleChange}
                   />
 
-                  <span className="payment-option-icon">
-                    💳
-                  </span>
+                  <span className="payment-option-icon">💳</span>
 
                   <span className="payment-option-content">
                     <strong>Online Payment</strong>
-                    <small>
-                      UPI, Credit Card, Debit Card and Net Banking
-                    </small>
+                    <small>UPI, Credit Card, Debit Card and Net Banking</small>
                   </span>
 
-                  <span className="payment-option-check">
-                    ✓
-                  </span>
+                  <span className="payment-option-check">✓</span>
                 </label>
 
                 <div className="payment-coming-soon">
@@ -720,37 +655,26 @@ function Checkout() {
               <h2>Order Summary</h2>
 
               <p className="checkout-order-count">
-                {totalItems} {totalItems === 1 ? "item" : "items"}
-                {" "}in your cart
+                {totalItems} {totalItems === 1 ? "item" : "items"} in your cart
               </p>
 
               <div className="checkout-order-items">
                 {cartItems.map((entry) => {
                   const item = entry.item;
-                  const id =
-                    getValue(item, "ITEM_ID") ||
-                    getValue(item, "ID");
+                  const id = getValue(item, "ITEM_ID") || getValue(item, "ID");
 
                   const name = getValue(item, "ITEM_NAME");
 
-                  const price =
-                    Number(getValue(item, "UNIT_PRICE")) || 0;
+                  const price = Number(getValue(item, "UNIT_PRICE")) || 0;
 
                   return (
-                    <div
-                      className="checkout-order-item"
-                      key={id}
-                    >
+                    <div className="checkout-order-item" key={id}>
                       <div className="checkout-order-item-info">
                         <strong>{name}</strong>
                         <span>Qty: {entry.quantity}</span>
                       </div>
 
-                      <strong>
-                        {formatPrice(
-                          price * entry.quantity
-                        )}
-                      </strong>
+                      <strong>{formatPrice(price * entry.quantity)}</strong>
                     </div>
                   );
                 })}
@@ -763,9 +687,7 @@ function Checkout() {
 
               <div className="checkout-total-row">
                 <span>Delivery</span>
-                <strong className="checkout-free">
-                  Free
-                </strong>
+                <strong className="checkout-free">Free</strong>
               </div>
 
               <div className="checkout-total-divider" />
@@ -814,8 +736,8 @@ function Checkout() {
               <h2>✓ Details validated successfully</h2>
 
               <p>
-                Please verify your delivery details before
-                proceeding to payment.
+                Please verify your delivery details before proceeding to
+                payment.
               </p>
 
               <div className="checkout-review-address">
@@ -825,8 +747,7 @@ function Checkout() {
                 <p>{formData.address}</p>
 
                 <p>
-                  {formData.city}, {formData.state} -{" "}
-                  {formData.pincode}
+                  {formData.city}, {formData.state} - {formData.pincode}
                 </p>
 
                 <p>{formData.phone}</p>
@@ -838,8 +759,7 @@ function Checkout() {
               </strong>
 
               <p className="checkout-review-note">
-                Your order will be created when you proceed
-                with payment.
+                Your order will be created when you proceed with payment.
               </p>
 
               <button

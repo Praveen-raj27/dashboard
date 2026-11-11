@@ -17,6 +17,7 @@ import Checkout from "./pages/Checkout/Checkout";
 import ForgotPassword from "./pages/Login/ForgotPassword";
 import ResetPassword from "./pages/Login/ResetPassword";
 import MyOrders from "./pages/customer/MyOrders";
+import TrackOrder from "./pages/customer/TrackOrder";
 
 import "./index.css";
 
@@ -38,6 +39,7 @@ function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/my-orders" element={<MyOrders />} />
+            <Route path="/track-order/:orderId" element={<TrackOrder />} />
           </Route>
 
           {/* Admin-only routes */}
