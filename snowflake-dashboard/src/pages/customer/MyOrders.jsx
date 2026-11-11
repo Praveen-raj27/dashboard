@@ -59,7 +59,13 @@ const MyOrders = () => {
     status?.replaceAll("_", " ") || "Pending";
 
   if (loading) {
-    return <div className="orders-message">Loading your orders...</div>;
+    return (
+      <div className="orders-loader">
+        <div className="orders-spinner"></div>
+        <p>Loading your orders...</p>
+        <span>Please wait while we fetch your orders.</span>
+      </div>
+    );
   }
 
   if (error) {

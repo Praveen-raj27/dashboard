@@ -364,3 +364,30 @@
     padding: 18px;
   }
 }
+
+.delivery-assigned-info {
+  padding: 16px;
+  margin: 20px 0;
+  background: #f5f7f4;
+  border: 1px solid #e9ece8;
+  border-radius: 10px;
+}
+
+.delivery-assigned-info h3 {
+  margin-top: 0;
+  margin-bottom: 14px;
+}
+
+.delivery-assigned-info p {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #25352f;
+}
+
+.delivery-assigned-info a {
+  display: inline-block;
+  margin-top: 8px;
+  color: #25352f;
+  font-weight: 600;
+  text-decoration: underline;
+}

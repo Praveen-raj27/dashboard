@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import "./Header.css";
 
 function Header() {
@@ -17,13 +17,9 @@ function Header() {
 
   const user = getUser();
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     };
@@ -46,9 +42,7 @@ function Header() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-
     setIsOpen(false);
-
     navigate("/login", { replace: true });
   };
 
@@ -61,6 +55,27 @@ function Header() {
         <span>Snowpify</span>
       </div>
 
+      {/* Customer navigation */}
+      <nav className="app-header-nav">
+        <NavLink
+          to="/home"
+          className={({ isActive }) =>
+            `app-header-nav-link ${isActive ? "active" : ""}`
+          }
+        >
+          Shop
+        </NavLink>
+
+        <NavLink
+          to="/my-orders"
+          className={({ isActive }) =>
+            `app-header-nav-link ${isActive ? "active" : ""}`
+          }
+        >
+          My Orders
+        </NavLink>
+      </nav>
+
       <div className="app-header-profile" ref={dropdownRef}>
         <button
           type="button"
@@ -72,12 +87,8 @@ function Header() {
           <div className="profile-avatar">{firstLetter}</div>
 
           <div className="profile-user-info">
-            <span className="profile-user-name">
-              {user.name || "User"}
-            </span>
-            <span className="profile-user-role">
-              {user.role || "User"}
-            </span>
+            <span className="profile-user-name">{user.name || "User"}</span>
+            <span className="profile-user-role">{user.role || "User"}</span>
           </div>
 
           <span className={`profile-chevron ${isOpen ? "rotated" : ""}`}>

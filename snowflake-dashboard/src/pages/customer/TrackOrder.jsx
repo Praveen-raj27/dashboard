@@ -63,7 +63,13 @@ const TrackOrder = () => {
   };
 
   if (loading) {
-    return <div className="tracking-message">Loading tracking details...</div>;
+    return (
+      <div className="tracking-loader">
+        <div className="tracking-spinner"></div>
+        <p>Loading tracking details...</p>
+        <span>Please wait while we fetch your order updates.</span>
+      </div>
+    );
   }
 
   if (error) {

@@ -312,3 +312,52 @@
   font-size: 17px;
   transition: transform 0.2s ease;
 }
+.app-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-left: auto;
+  margin-right: 32px;
+}
+
+.app-header-nav-link {
+  position: relative;
+  color: #f5f3ed;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 0;
+  transition: color 0.2s ease;
+}
+
+.app-header-nav-link:hover,
+.app-header-nav-link.active {
+  color: #e9b96e;
+}
+
+.app-header-nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 2px;
+  width: 0;
+  height: 2px;
+  background: #e9b96e;
+  transition: width 0.2s ease;
+}
+
+.app-header-nav-link:hover::after,
+.app-header-nav-link.active::after {
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .app-header-nav {
+    gap: 16px;
+    margin-right: 12px;
+  }
+
+  .app-header-nav-link {
+    font-size: 12px;
+  }
+}

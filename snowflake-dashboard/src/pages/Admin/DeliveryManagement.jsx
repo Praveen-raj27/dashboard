@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import {
   getAllDeliveryOrders,
@@ -19,7 +20,7 @@ const DeliveryManagement = () => {
   const [error, setError] = useState("");
 
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [saving, setSaving] = useState(false);
+  const [savingAction, setSavingAction] = useState(null);
   const [actionError, setActionError] = useState("");
   const [actionSuccess, setActionSuccess] = useState("");
 
@@ -60,14 +61,14 @@ const DeliveryManagement = () => {
 
   // Close modal
   const closeManageModal = () => {
-    if (saving) return;
+    if (savingAction) return;
 
     setSelectedOrder(null);
     setActionError("");
     setActionSuccess("");
   };
 
-  // Refresh orders after an admin action
+  // Refresh orders after admin actions
   const refreshOrders = async () => {
     const data = await getAllDeliveryOrders();
     const updatedOrders = data || [];
@@ -90,7 +91,7 @@ const DeliveryManagement = () => {
     event.preventDefault();
 
     try {
-      setSaving(true);
+      setSavingAction("assign");
       setActionError("");
       setActionSuccess("");
 
@@ -99,13 +100,21 @@ const DeliveryManagement = () => {
         ...deliveryForm,
       });
 
-      await refreshOrders();
+      const updatedOrder = await refreshOrders();
+
+      if (updatedOrder) {
+        setStatusForm({
+          newStatus: NEXT_STATUS[updatedOrder.DELIVERY_STATUS] || "",
+          description: "",
+          location: "",
+        });
+      }
 
       setActionSuccess("Delivery partner assigned successfully.");
     } catch (error) {
       setActionError(error.message);
     } finally {
-      setSaving(false);
+      setSavingAction(null);
     }
   };
 
@@ -114,7 +123,7 @@ const DeliveryManagement = () => {
     event.preventDefault();
 
     try {
-      setSaving(true);
+      setSavingAction("status");
       setActionError("");
       setActionSuccess("");
 
@@ -125,21 +134,19 @@ const DeliveryManagement = () => {
 
       const updatedOrder = await refreshOrders();
 
-      // Automatically select the next delivery status
       if (updatedOrder) {
-        setStatusForm((previous) => ({
-          ...previous,
+        setStatusForm({
           newStatus: NEXT_STATUS[updatedOrder.DELIVERY_STATUS] || "",
           description: "",
           location: "",
-        }));
+        });
       }
 
       setActionSuccess("Delivery status updated successfully.");
     } catch (error) {
       setActionError(error.message);
     } finally {
-      setSaving(false);
+      setSavingAction(null);
     }
   };
 
@@ -194,6 +201,7 @@ const DeliveryManagement = () => {
 
   return (
     <main className="delivery-management-page">
+
       {/* Page Header */}
       <div className="page-header">
         <div>
@@ -210,6 +218,7 @@ const DeliveryManagement = () => {
 
       {/* Delivery Statistics */}
       <div className="delivery-stats">
+
         <div className="delivery-stat-card">
           <span>Total Orders</span>
           <h2>{orders.length}</h2>
@@ -251,10 +260,12 @@ const DeliveryManagement = () => {
             }
           </h2>
         </div>
+
       </div>
 
       {/* Orders Table */}
       <section className="delivery-orders-section">
+
         <div className="delivery-section-header">
           <div>
             <h2>All Orders</h2>
@@ -277,6 +288,7 @@ const DeliveryManagement = () => {
         ) : (
           <div className="delivery-table-wrapper">
             <table className="delivery-table">
+
               <thead>
                 <tr>
                   <th>Order ID</th>
@@ -293,6 +305,7 @@ const DeliveryManagement = () => {
               <tbody>
                 {orders.map((order) => (
                   <tr key={order.ORDER_ID}>
+
                     <td>
                       <strong>
                         #{order.ORDER_ID.slice(0, 8)}
@@ -347,18 +360,23 @@ const DeliveryManagement = () => {
                         Manage
                       </button>
                     </td>
+
                   </tr>
                 ))}
               </tbody>
+
             </table>
           </div>
         )}
+
       </section>
 
       {/* Delivery Management Modal */}
       {selectedOrder && (
         <div className="delivery-modal-overlay">
+
           <div className="delivery-modal">
+
             {/* Modal Header */}
             <div className="delivery-modal-header">
               <div>
@@ -372,7 +390,7 @@ const DeliveryManagement = () => {
                 type="button"
                 className="delivery-modal-close"
                 onClick={closeManageModal}
-                disabled={saving}
+                disabled={savingAction !== null}
               >
                 ×
               </button>
@@ -396,170 +414,222 @@ const DeliveryManagement = () => {
             </div>
 
             {selectedOrder.PAYMENT_STATUS !== "PAID" ? (
+
               <p className="delivery-warning">
                 Delivery cannot be assigned until payment is completed.
               </p>
+
             ) : (
+
               <>
-                {/* Delivery Assignment Form */}
-                <form onSubmit={handleAssignDelivery}>
-                  <h3>Delivery Assignment</h3>
 
-                  <label>Delivery Partner</label>
-                  <input
-                    value={deliveryForm.deliveryPartner}
-                    onChange={(e) =>
-                      setDeliveryForm((previous) => ({
-                        ...previous,
-                        deliveryPartner: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g. BlueDart"
-                    required
-                    disabled={saving}
-                  />
+                {/* Delivery Assignment */}
+                {!selectedOrder.DELIVERY_PARTNER && (
+                  <form onSubmit={handleAssignDelivery}>
 
-                  <label>Tracking Number</label>
-                  <input
-                    value={deliveryForm.trackingNumber}
-                    onChange={(e) =>
-                      setDeliveryForm((previous) => ({
-                        ...previous,
-                        trackingNumber: e.target.value,
-                      }))
-                    }
-                    placeholder="Enter tracking number"
-                    required
-                    disabled={saving}
-                  />
+                    <h3>Delivery Assignment</h3>
 
-                  <label>Tracking URL</label>
-                  <input
-                    type="url"
-                    value={deliveryForm.trackingUrl}
-                    onChange={(e) =>
-                      setDeliveryForm((previous) => ({
-                        ...previous,
-                        trackingUrl: e.target.value,
-                      }))
-                    }
-                    placeholder="https://..."
-                    disabled={saving}
-                  />
+                    <label>Delivery Partner</label>
+                    <input
+                      value={deliveryForm.deliveryPartner}
+                      onChange={(e) =>
+                        setDeliveryForm((previous) => ({
+                          ...previous,
+                          deliveryPartner: e.target.value,
+                        }))
+                      }
+                      placeholder="e.g. BlueDart"
+                      required
+                      disabled={savingAction !== null}
+                    />
 
-                  <label>Estimated Delivery Date</label>
-                  <input
-                    type="date"
-                    value={deliveryForm.estimatedDeliveryDate}
-                    onChange={(e) =>
-                      setDeliveryForm((previous) => ({
-                        ...previous,
-                        estimatedDeliveryDate: e.target.value,
-                      }))
-                    }
-                    required
-                    disabled={saving}
-                  />
+                    <label>Tracking Number</label>
+                    <input
+                      value={deliveryForm.trackingNumber}
+                      onChange={(e) =>
+                        setDeliveryForm((previous) => ({
+                          ...previous,
+                          trackingNumber: e.target.value,
+                        }))
+                      }
+                      placeholder="Enter tracking number"
+                      required
+                      disabled={savingAction !== null}
+                    />
 
-                  <button
-                    type="submit"
-                    className="delivery-primary-btn"
-                    disabled={saving}
-                  >
-                    {saving
-                      ? "Saving..."
-                      : "Save Delivery Assignment"}
-                  </button>
-                </form>
+                    <label>Tracking URL</label>
+                    <input
+                      type="url"
+                      value={deliveryForm.trackingUrl}
+                      onChange={(e) =>
+                        setDeliveryForm((previous) => ({
+                          ...previous,
+                          trackingUrl: e.target.value,
+                        }))
+                      }
+                      placeholder="https://..."
+                      disabled={savingAction !== null}
+                    />
+
+                    <label>Estimated Delivery Date</label>
+                    <input
+                      type="date"
+                      value={deliveryForm.estimatedDeliveryDate}
+                      onChange={(e) =>
+                        setDeliveryForm((previous) => ({
+                          ...previous,
+                          estimatedDeliveryDate: e.target.value,
+                        }))
+                      }
+                      required
+                      disabled={savingAction !== null}
+                    />
+
+                    <button
+                      type="submit"
+                      className="delivery-primary-btn"
+                      disabled={savingAction !== null}
+                    >
+                      {savingAction === "assign"
+                        ? "Assigning..."
+                        : "Assign Delivery Partner"}
+                    </button>
+
+                  </form>
+                )}
+
+                {/* Assigned Delivery Details */}
+                {selectedOrder.DELIVERY_PARTNER && (
+                  <div className="delivery-assigned-info">
+
+                    <h3>Delivery Partner Assigned</h3>
+
+                    <p>
+                      <strong>Partner:</strong>{" "}
+                      {selectedOrder.DELIVERY_PARTNER}
+                    </p>
+
+                    <p>
+                      <strong>Tracking Number:</strong>{" "}
+                      {selectedOrder.TRACKING_NUMBER || "—"}
+                    </p>
+
+                    <p>
+                      <strong>Estimated Delivery:</strong>{" "}
+                      {formatDate(
+                        selectedOrder.ESTIMATED_DELIVERY_DATE
+                      )}
+                    </p>
+
+                    {selectedOrder.TRACKING_URL && (
+                      <a
+                        href={selectedOrder.TRACKING_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Track Shipment
+                      </a>
+                    )}
+
+                  </div>
+                )}
 
                 <div className="delivery-modal-divider" />
 
-                {/* Delivery Status Form */}
-                <form onSubmit={handleStatusUpdate}>
-                  <h3>Update Delivery Status</h3>
+                {/* Update Delivery Status */}
+                {selectedOrder.DELIVERY_PARTNER &&
+                  selectedOrder.DELIVERY_STATUS !== "DELIVERED" && (
+                    <form onSubmit={handleStatusUpdate}>
 
-                  <p className="delivery-current-status">
-                    Current status:{" "}
-                    <strong>
-                      {formatStatus(selectedOrder.DELIVERY_STATUS)}
-                    </strong>
-                  </p>
+                      <h3>Update Delivery Status</h3>
 
-                  <label>Next Status</label>
-                  <select
-                    value={statusForm.newStatus}
-                    onChange={(e) =>
-                      setStatusForm((previous) => ({
-                        ...previous,
-                        newStatus: e.target.value,
-                      }))
-                    }
-                    required
-                    disabled={
-                      saving || !selectedOrder.DELIVERY_PARTNER
-                    }
-                  >
-                    <option value="">Select next status</option>
+                      <p className="delivery-current-status">
+                        Current status:{" "}
+                        <strong>
+                          {formatStatus(selectedOrder.DELIVERY_STATUS)}
+                        </strong>
+                      </p>
 
-                    {NEXT_STATUS[selectedOrder.DELIVERY_STATUS] && (
-                      <option
-                        value={
-                          NEXT_STATUS[selectedOrder.DELIVERY_STATUS]
+                      <label>Next Status</label>
+                      <select
+                        value={statusForm.newStatus}
+                        onChange={(e) =>
+                          setStatusForm((previous) => ({
+                            ...previous,
+                            newStatus: e.target.value,
+                          }))
+                        }
+                        required
+                        disabled={savingAction !== null}
+                      >
+                        <option value="">
+                          Select next status
+                        </option>
+
+                        {NEXT_STATUS[selectedOrder.DELIVERY_STATUS] && (
+                          <option
+                            value={
+                              NEXT_STATUS[selectedOrder.DELIVERY_STATUS]
+                            }
+                          >
+                            {formatStatus(
+                              NEXT_STATUS[selectedOrder.DELIVERY_STATUS]
+                            )}
+                          </option>
+                        )}
+                      </select>
+
+                      <label>Description</label>
+                      <textarea
+                        value={statusForm.description}
+                        onChange={(e) =>
+                          setStatusForm((previous) => ({
+                            ...previous,
+                            description: e.target.value,
+                          }))
+                        }
+                        placeholder="Enter delivery update"
+                        required
+                        disabled={savingAction !== null}
+                      />
+
+                      <label>Current Location</label>
+                      <input
+                        value={statusForm.location}
+                        onChange={(e) =>
+                          setStatusForm((previous) => ({
+                            ...previous,
+                            location: e.target.value,
+                          }))
+                        }
+                        placeholder="e.g. Chennai Warehouse"
+                        required
+                        disabled={savingAction !== null}
+                      />
+
+                      <button
+                        type="submit"
+                        className="delivery-primary-btn"
+                        disabled={
+                          savingAction !== null ||
+                          !statusForm.newStatus
                         }
                       >
-                        {formatStatus(
-                          NEXT_STATUS[selectedOrder.DELIVERY_STATUS]
-                        )}
-                      </option>
-                    )}
-                  </select>
+                        {savingAction === "status"
+                          ? "Updating..."
+                          : "Update Status"}
+                      </button>
 
-                  <label>Description</label>
-                  <textarea
-                    value={statusForm.description}
-                    onChange={(e) =>
-                      setStatusForm((previous) => ({
-                        ...previous,
-                        description: e.target.value,
-                      }))
-                    }
-                    placeholder="Enter delivery update"
-                    required
-                    disabled={saving}
-                  />
-
-                  <label>Current Location</label>
-                  <input
-                    value={statusForm.location}
-                    onChange={(e) =>
-                      setStatusForm((previous) => ({
-                        ...previous,
-                        location: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g. Chennai Warehouse"
-                    required
-                    disabled={saving}
-                  />
-
-                  <button
-                    type="submit"
-                    className="delivery-primary-btn"
-                    disabled={
-                      saving ||
-                      !selectedOrder.DELIVERY_PARTNER ||
-                      !statusForm.newStatus
-                    }
-                  >
-                    {saving ? "Updating..." : "Update Status"}
-                  </button>
-
-                  {!selectedOrder.DELIVERY_PARTNER && (
-                    <p className="delivery-warning">
-                      Assign a delivery partner before updating the status.
-                    </p>
+                    </form>
                   )}
-                </form>
+
+                {/* Delivered Confirmation */}
+                {selectedOrder.DELIVERY_STATUS === "DELIVERED" && (
+                  <p className="delivery-action-success">
+                    This order has been successfully delivered.
+                  </p>
+                )}
+
               </>
             )}
 
@@ -575,9 +645,11 @@ const DeliveryManagement = () => {
                 {actionSuccess}
               </p>
             )}
+
           </div>
         </div>
       )}
+
     </main>
   );
 };
