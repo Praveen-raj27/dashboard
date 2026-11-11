@@ -13,7 +13,8 @@ export const fetchInventory = async ({
       QUANTITY,
       UNIT_PRICE,
       SUPPLIER,
-      CREATED_AT
+      CREATED_AT,
+      IMAGE_URL
     FROM INVENTORY
   `;
 

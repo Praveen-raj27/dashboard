@@ -11,7 +11,6 @@ function Home() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [sortBy, setSortBy] = useState("default");
-
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [modalQuantity, setModalQuantity] = useState(1);
 
@@ -38,14 +37,21 @@ function Home() {
   const navigate = useNavigate();
 
   // Supports uppercase Snowflake columns and lowercase API fields
-  const getValue = (item, key) => item[key] ?? item[key.toLowerCase()] ?? "";
+  const getValue = (item, key) =>
+    item?.[key] ?? item?.[key.toLowerCase()] ?? "";
 
+  // Get product image URL
+  const getProductImage = (item) =>
+    getValue(item, "IMAGE_URL") || getValue(item, "IMAGEURL") || "";
+
+  // Fetch inventory
   const fetchItems = async () => {
     try {
       setLoading(true);
       setError("");
 
       const data = await getInventory();
+
       setInventory(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err.message || "Unable to load products.");
@@ -58,7 +64,7 @@ function Home() {
     fetchItems();
   }, []);
 
-  // Persist cart to localStorage
+  // Persist cart
   useEffect(() => {
     if (loading || inventory.length === 0) return;
 
@@ -79,6 +85,7 @@ function Home() {
     localStorage.setItem("snowpify_cart", JSON.stringify(savedCart));
   }, [cart, inventory, loading]);
 
+  // Categories
   const categories = useMemo(() => {
     return [
       "All",
@@ -88,6 +95,7 @@ function Home() {
     ];
   }, [inventory]);
 
+  // Search, filter and sort
   const filteredProducts = useMemo(() => {
     let products = inventory.filter((item) => {
       const name = String(getValue(item, "ITEM_NAME"));
@@ -121,7 +129,7 @@ function Home() {
     return products;
   }, [inventory, search, category, sortBy]);
 
-  // Open product details modal
+  // Product modal
   const openProductModal = (item) => {
     setSelectedProduct(item);
     setModalQuantity(1);
@@ -132,7 +140,7 @@ function Home() {
     setModalQuantity(1);
   };
 
-  // Add or remove product quantity
+  // Add or remove cart quantity
   const updateCart = (item, change) => {
     const id = getValue(item, "ITEM_ID");
     const stock = Number(getValue(item, "QUANTITY")) || 0;
@@ -157,13 +165,13 @@ function Home() {
     });
   };
 
-  // Cart total quantity
+  // Cart quantity
   const totalCartItems = Object.values(cart).reduce(
     (total, quantity) => total + quantity,
     0,
   );
 
-  // Cart total price
+  // Cart total
   const cartTotal = inventory.reduce((total, item) => {
     const id = getValue(item, "ITEM_ID");
 
@@ -175,14 +183,6 @@ function Home() {
     0,
   );
 
-  const totalValue = inventory.reduce(
-    (total, item) =>
-      total +
-      Number(getValue(item, "QUANTITY") || 0) *
-        Number(getValue(item, "UNIT_PRICE") || 0),
-    0,
-  );
-
   const formatPrice = (price) =>
     new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -190,6 +190,7 @@ function Home() {
       maximumFractionDigits: 2,
     }).format(Number(price) || 0);
 
+  // Category fallback icon
   const getProductIcon = (category) => {
     const value = String(category).toLowerCase();
 
@@ -201,6 +202,11 @@ function Home() {
     if (value.includes("accessor")) return "⌚";
 
     return "📦";
+  };
+
+  // Reusable image fallback
+  const handleImageError = (event) => {
+    event.currentTarget.style.display = "none";
   };
 
   return (
@@ -291,6 +297,7 @@ function Home() {
             <div className="store-controls">
               <div className="store-search">
                 <span>⌕</span>
+
                 <input
                   type="search"
                   placeholder="Search products..."
@@ -317,6 +324,7 @@ function Home() {
             <div className="store-cart-summary">
               <div className="store-cart-info">
                 <span className="store-cart-icon">🛒</span>
+
                 <div>
                   <strong>
                     {totalCartItems} {totalCartItems === 1 ? "Item" : "Items"}
@@ -338,6 +346,7 @@ function Home() {
             </div>
           )}
 
+          {/* Loading */}
           {loading ? (
             <div className="store-message">
               <div className="store-spinner"></div>
@@ -354,6 +363,7 @@ function Home() {
               <span>🔍</span>
               <h3>No products found</h3>
               <p>Try another search or category.</p>
+
               <button
                 onClick={() => {
                   setSearch("");
@@ -372,6 +382,7 @@ function Home() {
                 const quantity = Number(getValue(item, "QUANTITY")) || 0;
                 const price = getValue(item, "UNIT_PRICE");
                 const selectedQuantity = cart[id] || 0;
+                const imageUrl = getProductImage(item);
 
                 return (
                   <article
@@ -397,6 +408,16 @@ function Home() {
                         {getProductIcon(itemCategory)}
                       </div>
 
+                      {imageUrl && (
+                        <img
+                          className="product-card-photo"
+                          src={imageUrl}
+                          alt={name || "Product"}
+                          loading="lazy"
+                          onError={handleImageError}
+                        />
+                      )}
+
                       <span
                         className={`product-stock ${
                           quantity > 0 ? "in-stock" : "out-stock"
@@ -418,6 +439,7 @@ function Home() {
                         <span>{quantity} available</span>
                       </div>
 
+                      {/* Cart Quantity Controls */}
                       {selectedQuantity > 0 ? (
                         <div className="product-cart-actions">
                           <div className="quantity-control">
@@ -508,8 +530,7 @@ function Home() {
                 ×
               </button>
 
-              {/* 3D Product Preview */}
-
+              {/* Product Image Preview */}
               <div className="product-modal-visual">
                 <span className="product-preview-label">
                   SNOWPIFY EXCLUSIVE
@@ -519,11 +540,37 @@ function Home() {
                   <div className="product-stage-glow" />
 
                   <div className="product-stage-platform">
-                    <div className="product-stage-object">
+                    {getProductImage(selectedProduct) && (
+                      <img
+                        className="product-stage-photo"
+                        src={getProductImage(selectedProduct)}
+                        alt={getValue(selectedProduct, "ITEM_NAME")}
+                        onError={(event) => {
+                          event.currentTarget.style.display = "none";
+
+                          const fallback =
+                            event.currentTarget.parentElement.querySelector(
+                              ".product-stage-fallback",
+                            );
+
+                          if (fallback) {
+                            fallback.style.display = "grid";
+                          }
+                        }}
+                      />
+                    )}
+
+                    <div
+                      className="product-stage-fallback"
+                      style={{
+                        display: getProductImage(selectedProduct)
+                          ? "none"
+                          : "grid",
+                      }}
+                    >
                       {getProductIcon(getValue(selectedProduct, "CATEGORY"))}
                     </div>
                   </div>
-
                   <div className="product-stage-shadow" />
                 </div>
 
@@ -568,6 +615,7 @@ function Home() {
                     : "Currently out of stock"}
                 </div>
 
+                {/* Quantity Selector */}
                 {Number(getValue(selectedProduct, "QUANTITY")) > 0 && (
                   <>
                     <div className="product-modal-quantity-row">
@@ -608,6 +656,7 @@ function Home() {
                       </div>
                     </div>
 
+                    {/* Add to Cart */}
                     <button
                       type="button"
                       className="add-cart-button product-modal-add-button"
